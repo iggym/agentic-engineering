@@ -1,0 +1,11 @@
+{
+  "site": {
+    "repo_name": "agentic-engineering",
+    "title": "Agentic Engineering",
+    "tagline": "Orchestration, context, and tool use for agents built to work, not demo.",
+    "base_url": "https://iggym.github.io/agentic-engineering/",
+    "audience": "Engineers building agent systems specifically",
+    "description": "Patterns for orchestration, context isolation, tool use, and the harness that holds an agent together — diagnostic, implementation-focused, and scoped narrower than production-ai-patterns."
+  },
+  "articles": []
+}
