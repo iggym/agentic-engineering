@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Never Committed — Agentic Engineering</title>
+<style>
+  :root {
+    --bg: #0c0c0c;
+    --bg-elevated: #151513;
+    --fg: #e4dfd6;
+    --fg-dim: #9e9889;
+    --muted: #5c574e;
+    --accent: #d4943a;
+    --accent-dim: rgba(212,148,58,0.12);
+    --danger: #d45050;
+    --danger-dim: rgba(212,80,80,0.10);
+    --danger-glow: rgba(212,80,80,0.25);
+    --success: #50b870;
+    --card: #1a1a18;
+    --border: #282420;
+    --mono: "SF Mono","Fira Code","Cascadia Code","Consolas",monospace;
+    --sans: "SF Pro Display","Segoe UI",system-ui,-apple-system,sans-serif;
+    --radius: 8px;
+    --radius-lg: 14px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; background: var(--bg); color: var(--fg); font-family: var(--sans); line-height: 1.7; }
+  body { min-height: 100vh; }
+  ::selection { background: var(--accent); color: var(--bg); }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* Progress bar */
+  #progress {
+    position: fixed; top: 0; left: 0; height: 3px; width: 0%;
+    background: var(--accent); z-index: 300;
+    transition: width 0.08s linear;
+  }
+
+  /* Topbar */
+  #topbar {
+    position: sticky; top: 0; z-index: 200;
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    background: rgba(12,12,12,0.78);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px; height: 56px;
+    display: flex; align-items: center; gap: 16px;
+  }
+  #topbar .home-link { font-weight: 700; font-size: 14px; letter-spacing: -0.3px; white-space: nowrap; }
+  #topbar .breadcrumb { font-size: 13px; color: var(--muted); }
+  #topbar .breadcrumb span { color: var(--fg-dim); }
+  #topbar .reading-time { font-size: 12px; color: var(--muted); margin-left: auto; white-space: nowrap; }
+  #hamburger {
+    display: none; background: none; border: 1px solid var(--border); border-radius: 6px;
+    color: var(--fg); padding: 6px 8px; cursor: pointer; font-size: 18px; line-height: 1;
+  }
+  #hamburger:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* Layout */
+  .layout {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    max-width: 1100px;
+    margin: 0 auto;
+    min-height: calc(100vh - 56px);
+  }
+  .sidebar {
+    padding: 32px 24px 32px 24px;
+    border-right: 1px solid var(--border);
+    position: sticky; top: 56px; height: calc(100vh - 56px);
+    overflow-y: auto;
+  }
+  .sidebar h2 { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); margin-bottom: 16px; }
+  .sidebar nav { display: flex; flex-direction: column; gap: 4px; }
+  .sidebar nav a {
+    font-size: 13px; color: var(--fg-dim); padding: 6px 10px; border-radius: 6px;
+    transition: background 0.15s, color 0.15s; text-decoration: none; display: block;
+  }
+  .sidebar nav a:hover, .sidebar nav a.active { background: var(--accent-dim); color: var(--accent); }
+  .main { padding: 40px 48px 80px; max-width: 720px; }
+
+  /* Drawer (mobile) */
+  .drawer-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 250;
+  }
+  .drawer-overlay.open { display: block; }
+  .drawer {
+    position: fixed; top: 0; left: -280px; width: 280px; height: 100vh;
+    background: var(--bg-elevated); border-right: 1px solid var(--border);
+    z-index: 260; padding: 24px; transition: left 0.25s ease; overflow-y: auto;
+  }
+  .drawer.open { left: 0; }
+  .drawer h2 { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); margin-bottom: 16px; margin-top: 16px; }
+  .drawer nav { display: flex; flex-direction: column; gap: 4px; }
+  .drawer nav a { font-size: 14px; color: var(--fg-dim); padding: 8px 10px; border-radius: 6px; text-decoration: none; display: block; }
+  .drawer nav a:hover { background: var(--accent-dim); color: var(--accent); }
+  .drawer-close { background: none; border: none; color: var(--fg); font-size: 20px; cursor: pointer; padding: 4px; }
+
+  @media (max-width: 880px) {
+    #hamburger { display: block; }
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .main { padding: 28px 20px 60px; }
+    #topbar .breadcrumb { display: none; }
+  }
+
+  /* Hero */
+  .hero-title {
+    font-size: clamp(36px, 6vw, 56px);
+    font-weight: 800;
+    letter-spacing: -2px;
+    line-height: 1.05;
+    margin-bottom: 16px;
+    color: var(--fg);
+  }
+  .hero-meta { font-size: 13px; color: var(--muted); margin-bottom: 40px; }
+
+  /* Section headers */
+  .section-header {
+    font-size: 22px; font-weight: 700; letter-spacing: -0.5px;
+    margin: 48px 0 20px; color: var(--fg);
+  }
+
+  /* Body text */
+  .prose { font-size: 16px; color: var(--fg-dim); margin-bottom: 20px; }
+  .prose strong { color: var(--fg); font-weight: 600; }
+
+  /* Spectrum widget */
+  .spectrum {
+    margin: 28px 0 36px; padding: 24px; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg);
+  }
+  .spectrum-labels { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+  .spectrum-bar {
+    height: 6px; border-radius: 3px; background: var(--border); position: relative; margin-bottom: 14px;
+  }
+  .spectrum-fill {
+    height: 100%; border-radius: 3px; width: 92%;
+    background: linear-gradient(90deg, var(--muted) 0%, var(--accent) 100%);
+  }
+  .spectrum-marker {
+    position: absolute; right: -4px; top: 50%; transform: translateY(-50%);
+    width: 14px; height: 14px; border-radius: 50%; background: var(--accent);
+    border: 2px solid var(--bg); box-shadow: 0 0 12px var(--accent-dim);
+  }
+  .spectrum-reframe { font-size: 15px; font-weight: 600; color: var(--accent); }
+
+  /* Pull quote */
+  .pull-quote {
+    margin: 36px 0; padding: 24px 28px; border-left: 3px solid var(--accent);
+    background: var(--accent-dim); border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+    font-size: 18px; font-weight: 600; line-height: 1.5; color: var(--fg);
+    letter-spacing: -0.3px;
+  }
+
+  /* Share block */
+  .share-block {
+    display: flex; align-items: center; gap: 10px; margin: 32px 0; flex-wrap: wrap;
+  }
+  .share-block span { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+  .share-btn {
+    font-size: 13px; padding: 7px 14px; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--card); color: var(--fg-dim); cursor: pointer; font-family: var(--sans);
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .share-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .share-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .share-btn.copied { border-color: var(--success); color: var(--success); }
+
+  /* Execution trace */
+  .trace-container { margin: 36px 0; }
+  .trace-controls { display: flex; gap: 8px; margin-bottom: 16px; }
+  .trace-btn {
+    font-size: 13px; padding: 6px 14px; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--card); color: var(--fg-dim); cursor: pointer; font-family: var(--sans);
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .trace-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .trace-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .trace-btn.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+  .trace-svg { width: 100%; max-width: 440px; display: block; margin: 0 auto; }
+  .trace-layer { cursor: pointer; transition: opacity 0.15s; }
+  .trace-layer:hover { opacity: 0.85; }
+  .trace-detail {
+    margin-top: 16px; padding: 16px 20px; background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); font-size: 14px; color: var(--fg-dim); min-height: 60px;
+    transition: border-color 0.2s;
+  }
+  .trace-detail.danger { border-color: var(--danger); }
+  .trace-detail strong { color: var(--fg); }
+  .trace-detail .danger-label { color: var(--danger); font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
+
+  /* Animated trace path */
+  @keyframes traceFlow {
+    from { stroke-dashoffset: 400; }
+    to { stroke-dashoffset: 0; }
+  }
+  .trace-flow {
+    stroke-dasharray: 8 6;
+    animation: traceFlow 2.5s linear infinite;
+  }
+  @keyframes pulseGlow {
+    0%, 100% { filter: drop-shadow(0 0 4px var(--danger-glow)); }
+    50% { filter: drop-shadow(0 0 14px var(--danger-glow)); }
+  }
+  .root-cause-glow { animation: pulseGlow 2s ease-in-out infinite; }
+
+  /* Checklist */
+  .checklist { margin: 28px 0; display: flex; flex-direction: column; gap: 8px; }
+  .checklist-item {
+    display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px;
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    cursor: pointer; transition: border-color 0.15s, background 0.15s; user-select: none;
+  }
+  .checklist-item:hover { border-color: var(--muted); }
+  .checklist-item.checked { border-color: var(--success); background: rgba(80,184,112,0.06); }
+  .checklist-box {
+    width: 20px; height: 20px; min-width: 20px; border-radius: 5px; border: 2px solid var(--muted);
+    display: flex; align-items: center; justify-content: center; margin-top: 1px;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .checklist-item.checked .checklist-box { border-color: var(--success); background: var(--success); }
+  .checklist-box svg { opacity: 0; transition: opacity 0.15s; }
+  .checklist-item.checked .checklist-box svg { opacity: 1; }
+  .checklist-text { font-size: 14px; color: var(--fg-dim); line-height: 1.5; }
+  .checklist-item.checked .checklist-text { color: var(--muted); text-decoration: line-through; }
+  .checklist-text strong { color: var(--fg); font-weight: 600; }
+
+  /* Recall cards */
+  .recall-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin: 28px 0; }
+  .recall-card {
+    perspective: 800px; height: 160px; cursor: pointer;
+  }
+  .recall-inner {
+    position: relative; width: 100%; height: 100%;
+    transition: transform 0.5s ease; transform-style: preserve-3d;
+  }
+  .recall-card.flipped .recall-inner { transform: rotateY(180deg); }
+  .recall-front, .recall-back {
+    position: absolute; inset: 0; backface-visibility: hidden;
+    padding: 20px; border-radius: var(--radius-lg); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center; text-align: center;
+    font-size: 14px; line-height: 1.6;
+  }
+  .recall-front { background: var(--card); color: var(--fg-dim); }
+  .recall-front::before { content: "Q"; position: absolute; top: 10px; left: 14px; font-size: 11px; color: var(--muted); font-weight: 700; letter-spacing: 1px; }
+  .recall-back { background: var(--accent-dim); border-color: rgba(212,148,58,0.3); color: var(--fg); transform: rotateY(180deg); }
+  .recall-back::before { content: "A"; position: absolute; top: 10px; left: 14px; font-size: 11px; color: var(--accent); font-weight: 700; letter-spacing: 1px; }
+  .recall-hint { font-size: 11px; color: var(--muted); position: absolute; bottom: 10px; right: 14px; }
+
+  /* Concept map */
+  .concept-map-container { margin: 36px 0; }
+  .concept-map-svg { width: 100%; max-width: 540px; display: block; margin: 0 auto; }
+  .concept-node { cursor: default; }
+  .concept-node text { pointer-events: none; }
+  .concept-edge text { pointer-events: none; }
+
+  /* CTA box */
+  .cta-box {
+    margin: 40px 0; padding: 24px 28px; border: 1px solid var(--accent);
+    border-radius: var(--radius-lg); background: var(--accent-dim);
+  }
+  .cta-box p { font-size: 15px; color: var(--fg); font-weight: 500; }
+
+  /* Footer */
+  footer {
+    border-top: 1px solid var(--border); padding: 40px 48px; max-width: 1100px; margin: 0 auto;
+  }
+  .footer-citations { font-size: 12px; color: var(--muted); line-height: 1.8; margin-bottom: 20px; }
+  .footer-citations a { color: var(--fg-dim); }
+  .footer-bottom { display: flex; justify-content: space-between; align-items: center; }
+  .footer-bottom a { font-size: 13px; color: var(--fg-dim); }
+  .scroll-top-btn {
+    font-size: 13px; padding: 6px 14px; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--card); color: var(--fg-dim); cursor: pointer; font-family: var(--sans);
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .scroll-top-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* Inline code */
+  code {
+    font-family: var(--mono); font-size: 0.88em; background: var(--bg);
+    padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border);
+    color: var(--accent);
+  }
+
+  /* Execution layer labels in prose */
+  .layer-name { color: var(--accent); font-weight: 600; }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+    .trace-flow { stroke-dasharray: none; }
+    .root-cause-glow { filter: none; }
+  }
+</style>
+</head>
+<body>
+
+<div id="progress" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+
+<header id="topbar">
+  <a href="https://iggym.github.io/agentic-engineering/" class="home-link">agentic-engineering</a>
+  <span class="breadcrumb">/ <span>Never Committed</span></span>
+  <span class="reading-time">5 min read</span>
+  <button id="hamburger" aria-label="Open navigation menu">&#9776;</button>
+</header>
+
+<div class="drawer-overlay" id="drawerOverlay"></div>
+<aside class="drawer" id="drawer" role="navigation" aria-label="Mobile navigation">
+  <button class="drawer-close" id="drawerClose" aria-label="Close navigation menu">&times;</button>
+  <h2>On this page</h2>
+  <nav>
+    <a href="#opening">The Setup</a>
+    <a href="#reframe">The Reframe</a>
+    <a href="#wiring">The Wiring</a>
+    <a href="#evidence">The Evidence</a>
+    <a href="#trace-section">Execution Trace</a>
+    <a href="#fix">The Fix</a>
+    <a href="#recall-section">Recall Check</a>
+    <a href="#concept-section">Failure Map</a>
+    <a href="#cta">Do This Today</a>
+  </nav>
+</aside>
+
+<div class="layout">
+  <aside class="sidebar" role="navigation" aria-label="Table of contents">
+    <h2>On this page</h2>
+    <nav id="tocNav">
+      <a href="#opening">The Setup</a>
+      <a href="#reframe">The Reframe</a>
+      <a href="#wiring">The Wiring</a>
+      <a href="#evidence">The Evidence</a>
+      <a href="#trace-section">Execution Trace</a>
+      <a href="#fix">The Fix</a>
+      <a href="#recall-section">Recall Check</a>
+      <a href="#concept-section">Failure Map</a>
+      <a href="#cta">Do This Today</a>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <article>
+      <h1 class="hero-title">Never Committed</h1>
+      <p class="hero-meta">April 15, 2025 &middot; Agent memory &amp; state</p>
+
+      <section id="opening">
+        <h2 class="section-header">The Setup</h2>
+        <p class="prose">A LangGraph agent running a multi-source research task executes three tool calls in sequence: a web search, a document retrieval, and a database query. Each returns structured results. The agent then synthesizes a final answer. The answer contradicts the web search results from step one — not in a nuanced way, but in a way that suggests the agent never saw them at all.</p>
+        <p class="prose">The developer checks the tool-call logs. All three calls returned 200. The search results are right there in the raw response payload. They increase the context window. They switch to a model with a larger token limit. The bug persists. They add retry logic. The bug persists. They insert a summarization step after each tool call to compress context. The bug <strong>still</strong> persists across multiple runs, always dropping the same early-step data.</p>
+        <p class="prose">The problem was never the context window. The problem was in the state channel's merge function — a single default that silently discarded data on every run.</p>
+      </section>
+
+      <section id="reframe">
+        <h2 class="section-header">The Reframe</h2>
+        <p class="prose">Your agent didn't run out of context. Your state layer never committed.</p>
+        <p class="prose">What looks like context collapse — an agent "forgetting" earlier information, contradicting itself, or looping on already-resolved subproblems — is almost always a state-commit failure. The information entered the system. It was processed. It was never persisted in a form that survived the next state transition.</p>
+        <div class="spectrum" role="img" aria-label="Spectrum from blame context window to blame state architecture, with this article positioned sharply toward state architecture">
+          <div class="spectrum-labels"><span>Blame the context window</span><span>Blame the state architecture</span></div>
+          <div class="spectrum-bar"><div class="spectrum-fill"></div><div class="spectrum-marker"></div></div>
+          <div class="spectrum-reframe">This article's stance: the state layer is the culprit in the vast majority of "context collapse" diagnoses.</div>
+        </div>
+      </section>
+
+      <section id="wiring">
+        <h2 class="section-header">The Wiring</h2>
+        <p class="prose">Engineers treat context window size and state architecture as separate problems. They're the same failure surface, viewed from different angles. The context window is the delivery mechanism — it determines how much information can be presented to the model in a single turn. State architecture is the commit protocol — it determines which information <strong>survives</strong> between turns. A 200K-token window with a broken commit protocol doesn't give you more memory. It gives you a larger buffer of uncommitted data that evaporates on the next merge.</p>
+        <p class="prose">This is why upgrading the model or increasing the context window doesn't fix these failures. You're expanding the buffer without fixing the commit. The data enters, gets processed, and gets overwritten before the model ever needs it again. You can verify this in your own system: run the same agent task twice, once with all tool results concatenated into a single state field, and once with each result in a separate field. If the single-field version fails more often, your merge strategy is the culprit, not the model.</p>
+        <blockquote class="pull-quote">Every "context collapse" you've debugged was actually a state-commit failure wearing a token-limit disguise.</blockquote>
+        <p class="prose">The same pattern appears across every agent framework — different implementations, identical failure mode. The surface symptom is always the same: the agent makes a decision that ignores information it received earlier. The knee-jerk diagnosis is always "not enough context." The actual root cause is always in the state layer — how information flows from tool output into the state object that the model reads on its next turn.</p>
+        <div class="share-block">
+          <span>Share</span>
+          <button class="share-btn" id="copyShare" aria-label="Copy reframe text to clipboard">Copy reframe</button>
+          <button class="share-btn" id="xShare" aria-label="Share on X">Post to X</button>
+        </div>
+      </section>
+
+      <section id="evidence">
+        <h2 class="section-header">The Evidence</h2>
+        <p class="prose">Tracing the LangGraph failure through its execution layers makes the mechanism mechanical, not theoretical:</p>
+        <p class="prose"><span class="layer-name">Planning.</span> The agent receives the research task, decomposes it into three sub-queries, and decides to call the web search tool first. State: <code>{messages: [task], tool_results: []}</code>.</p>
+        <p class="prose"><span class="layer-name">Tool Call.</span> The web search executes successfully, returning relevant results. The raw response is in the tool-call log. State should now include <code>tool_results: [search_results_A]</code>.</p>
+        <p class="prose"><span class="layer-name">State Commit.</span> LangGraph's state channel receives the tool result and merges it into the agent's state. Here's the failure: the <code>tool_results</code> field uses the default reducer, which replaces the entire field value. When the document retrieval returns results next, <code>tool_results</code> is overwritten with <code>[doc_results_B]</code>. The search results are gone. No error. No warning. No log entry. The state object silently shrank.</p>
+        <p class="prose"><span class="layer-name">Retrieval.</span> On the next planning step, the model reads the current state. It sees <code>tool_results: [doc_results_B, db_results_C]</code>. It doesn't know it's missing data — from the model's perspective, the state is complete and consistent.</p>
+        <p class="prose"><span class="layer-name">Output.</span> The final synthesis is built on incomplete state. It contradicts the first tool's results because those results aren't in the state anymore. The model didn't forget. The state layer never committed them.</p>
+        <p class="prose">LangGraph's documentation states that "by default, the new value will override the existing value" for state channels. This isn't a bug — it's the documented default. The fix is changing one line: specifying an append reducer instead of accepting the default.</p>
+        <p class="prose">Anthropic's "Building effective agents" guidelines, live since late 2024 and widely referenced by April 2025, frame this as an architecture concern: design your state schema to carry forward what matters, rather than assuming the model will extract it from raw conversation history. State design is a first-class engineering decision.</p>
+        <p class="prose">Public user reports about Cognition AI's Devin, documented across X/Twitter and blog posts through March and April 2025, described a consistent pattern on long-horizon tasks spanning 15–25 steps. Correct decisions made early were contradicted later. One widely-circulated example: a multi-file refactoring where Devin correctly identified a shared dependency pattern in step 3, then introduced an import that broke that pattern at step 19 — not because the model couldn't maintain the pattern, but because the decision wasn't surfaced in the state presented at step 19.</p>
+        <p class="prose">The strongest counterargument: "But sometimes the context window genuinely is too small — token limits are real." True, but token limits are a ceiling you hit once and fix by upgrading; state-commit failures are a floor you fall through on every run and fix by changing one line of reducer configuration. If your agent fails the same way on a 32K window and a 200K window, it's not a token problem.</p>
+      </section>
+
+      <section id="trace-section">
+        <h2 class="section-header">Execution Trace</h2>
+        <div class="trace-container">
+          <div class="trace-controls">
+            <button class="trace-btn" id="tracePrev" aria-label="Previous step">&larr; Prev</button>
+            <button class="trace-btn" id="tracePlay" aria-label="Auto-play trace">Play</button>
+            <button class="trace-btn" id="traceNext" aria-label="Next step">Next &rarr;</button>
+            <button class="trace-btn" id="traceReveal" aria-label="Reveal root cause">Reveal root cause</button>
+          </div>
+          <svg class="trace-svg" viewBox="0 0 440 620" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Execution trace diagram showing five agent layers">
+            <!-- Animated flow path -->
+            <line class="trace-flow" x1="220" y1="68" x2="220" y2="558" stroke="#5c574e" stroke-width="2" fill="none"/>
+
+            <!-- Layer 1: Planning -->
+            <g class="trace-layer" data-step="0" tabindex="0" role="button" aria-label="Planning step">
+              <rect x="70" y="20" width="300" height="56" rx="10" fill="#1a1a18" stroke="#282420" stroke-width="1.5"/>
+              <text x="220" y="45" text-anchor="middle" fill="#e4dfd6" font-size="15" font-weight="700" font-family="var(--sans)">Planning</text>
+              <text x="220" y="63" text-anchor="middle" fill="#9e9889" font-size="11" font-family="var(--sans)">Decompose task, choose first tool</text>
+            </g>
+            <!-- Arrow 1-2 -->
+            <line x1="220" y1="76" x2="220" y2="128" stroke="#282420" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+
+            <!-- Layer 2: Tool Call -->
+            <g class="trace-layer" data-step="1" tabindex="0" role="button" aria-label="Tool call step">
+              <rect x="70" y="130" width="300" height="56" rx="10" fill="#1a1a18" stroke="#282420" stroke-width="1.5"/>
+              <text x="220" y="155" text-anchor="middle" fill="#e4dfd6" font-size="15" font-weight="700" font-family="var(--sans)">Tool Call</text>
+              <text x="220" y="173" text-anchor="middle" fill="#9e9889" font-size="11" font-family="var(--sans)">Web search returns results_A</text>
+            </g>
+            <!-- Arrow 2-3 -->
+            <line x1="220" y1="186" x2="220" y2="238" stroke="#282420" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+
+            <!-- Layer 3: State Commit (ROOT CAUSE) -->
+            <g class="trace-layer root-cause-glow" data-step="2" tabindex="0" role="button" aria-label="State commit step, root cause of failure">
+              <rect x="70" y="240" width="300" height="56" rx="10" fill="#2a1616" stroke="#d45050" stroke-width="2"/>
+              <text x="220" y="263" text-anchor="middle" fill="#d45050" font-size="11" font-weight="700" font-family="var(--sans)" letter-spacing="1">ROOT CAUSE</text>
+              <text x="220" y="283" text-anchor="middle" fill="#e4dfd6" font-size="15" font-weight="700" font-family="var(--sans)">State Commit</text>
+            </g>
+            <!-- Arrow 3-4 -->
+            <line x1="220" y1="296" x2="220" y2="348" stroke="#282420" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+
+            <!-- Layer 4: Retrieval -->
+            <g class="trace-layer" data-step="3" tabindex="0" role="button" aria-label="Retrieval step">
+              <rect x="70" y="350" width="300" height="56" rx="10" fill="#1a1a18" stroke="#282420" stroke-width="1.5"/>
+              <text x="220" y="375" text-anchor="middle" fill="#e4dfd6" font-size="15" font-weight="700" font-family="var(--sans)">Retrieval</text>
+              <text x="220" y="393" text-anchor="middle" fill="#9e9889" font-size="11" font-family="var(--sans)">Model reads state — results_A gone</text>
+            </g>
+            <!-- Arrow 4-5 -->
+            <line x1="220" y1="406" x2="220" y2="458" stroke="#282420" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+
+            <!-- Layer 5: Output -->
+            <g class="trace-layer" data-step="4" tabindex="0" role="button" aria-label="Output step">
+              <rect x="70" y="460" width="300" height="56" rx="10" fill="#1a1a18" stroke="#282420" stroke-width="1.5"/>
+              <text x="220" y="485" text-anchor="middle" fill="#e4dfd6" font-size="15" font-weight="700" font-family="var(--sans)">Output</text>
+              <text x="220" y="503" text-anchor="middle" fill="#9e9889" font-size="11" font-family="var(--sans)">Synthesis built on incomplete state</text>
+            </g>
+
+            <!-- Data loss indicator -->
+            <g id="dataLossIndicator" opacity="0" style="transition: opacity 0.3s">
+              <line x1="375" y1="268" x2="410" y2="268" stroke="#d45050" stroke-width="2" stroke-dasharray="4 3"/>
+              <text x="415" y="264" fill="#d45050" font-size="10" font-weight="700" font-family="var(--sans)">DATA</text>
+              <text x="415" y="278" fill="#d45050" font-size="10" font-weight="700" font-family="var(--sans)">LOST</text>
+            </g>
+
+            <!-- Arrowhead marker -->
+            <defs>
+              <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+                <polygon points="0 0, 8 3, 0 6" fill="#282420"/>
+              </marker>
+            </defs>
+          </svg>
+          <div class="trace-detail" id="traceDetail">
+            <strong>Click a layer or use the controls</strong> to step through the execution trace and see where the state-commit failure occurs.
+          </div>
+        </div>
+      </section>
+
+      <section id="fix">
+        <h2 class="section-header">The Fix</h2>
+        <p class="prose">State-commit failures are deterministic. They reproduce on every run. That makes them unusually easy to diagnose — if you know where to look. Most frameworks default to replacement semantics because it's the simplest correct behavior for a single-value field like <code>current_step</code>. The problem arises when developers use the same default for collection fields like <code>tool_results</code> or <code>discovered_facts</code> — fields that should accumulate, not replace.</p>
+        <div class="checklist" id="checklist" role="list">
+          <div class="checklist-item" role="listitem" tabindex="0" data-id="0">
+            <div class="checklist-box"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><polyline points="2 6 5 9 10 3" stroke="#0c0c0c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="checklist-text"><strong>Audit your merge semantics</strong> — print full state before and after every merge; look for fields that shrink between steps</div>
+          </div>
+          <div class="checklist-item" role="listitem" tabindex="0" data-id="1">
+            <div class="checklist-box"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><polyline points="2 6 5 9 10 3" stroke="#0c0c0c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="checklist-text"><strong>Map replace vs. append</strong> — document which state fields use replacement and which use accumulation; any field that should grow must use an append reducer</div>
+          </div>
+          <div class="checklist-item" role="listitem" tabindex="0" data-id="2">
+            <div class="checklist-box"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><polyline points="2 6 5 9 10 3" stroke="#0c0c0c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="checklist-text"><strong>Checkpoint at decisions</strong> — add explicit state snapshots at decision points, not only after tool calls</div>
+          </div>
+          <div class="checklist-item" role="listitem" tabindex="0" data-id="3">
+            <div class="checklist-box"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><polyline points="2 6 5 9 10 3" stroke="#0c0c0c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="checklist-text"><strong>Run a recall test</strong> — give your agent a task where step 15 must reference a fact from step 3; if it fails, your state layer is dropping data</div>
+          </div>
+          <div class="checklist-item" role="listitem" tabindex="0" data-id="4">
+            <div class="checklist-box"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><polyline points="2 6 5 9 10 3" stroke="#0c0c0c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="checklist-text"><strong>Diff state, not prompts</strong> — when debugging, diff the state object between steps; the prompt is a rendering, the state is the source of truth</div>
+          </div>
+        </div>
+      </section>
+
+      <section id="recall-section">
+        <h2 class="section-header">Recall Check</h2>
+        <p class="prose">Tap a card to check your understanding. These aren't brain-science tricks — they're retrieval practice, the same mechanism your agent needs.</p>
+        <div class="recall-grid">
+          <div class="recall-card" tabindex="0" role="button" aria-label="Recall card: flip to see answer">
+            <div class="recall-inner">
+              <div class="recall-front">What's the difference between a context window problem and a state-commit failure?<span class="recall-hint">tap to flip</span></div>
+              <div class="recall-back">Context window is a capacity ceiling you hit once; state-commit failure is an architectural floor you fall through on every run.<span class="recall-hint">tap to flip back</span></div>
+            </div>
+          </div>
+          <div class="recall-card" tabindex="0" role="button" aria-label="Recall card: flip to see answer">
+            <div class="recall-inner">
+              <div class="recall-front">Which LangGraph default causes silent data loss?<span class="recall-hint">tap to flip</span></div>
+              <div class="recall-back">The default state channel reducer replaces the entire field value instead of appending — documented as "by default, the new value will override the existing value."<span class="recall-hint">tap to flip back</span></div>
+            </div>
+          </div>
+          <div class="recall-card" tabindex="0" role="button" aria-label="Recall card: flip to see answer">
+            <div class="recall-inner">
+              <div class="recall-front">What should you diff when debugging agent failures?<span class="recall-hint">tap to flip</span></div>
+              <div class="recall-back">Diff the state object between steps, not the prompt. The prompt is a rendering of the state; the state is the source of truth.<span class="recall-hint">tap to flip back</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="concept-section">
+        <h2 class="section-header">Failure Map</h2>
+        <div class="concept-map-container">
+          <svg class="concept-map-svg" viewBox="0 0 540 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Concept map linking state-commit failure to adjacent failure modes">
+            <!-- Edges -->
+            <line x1="270" y1="190" x2="110" y2="90" stroke="#282420" stroke-width="1.5"/>
+            <text x="175" y="130" fill="#5c574e" font-size="10" font-family="var(--sans)" text-anchor="middle" transform="rotate(-30 175 130)">misattributed to</text>
+
+            <line x1="270" y1="190" x2="430" y2="90" stroke="#282420" stroke-width="1.5"/>
+            <text x="365" y="130" fill="#5c574e" font-size="10" font-family="var(--sans)" text-anchor="middle" transform="rotate(30 365 130)">mechanism</text>
+
+            <line x1="270" y1="210" x2="270" y2="60" stroke="#282420" stroke-width="1.5"/>
+            <text x="258" y="130" fill="#5c574e" font-size="10" font-family="var(--sans)" text-anchor="end">confused with</text>
+
+            <line x1="270" y1="210" x2="110" y2="320" stroke="#282420" stroke-width="1.5"/>
+            <text x="175" y="275" fill="#5c574e" font-size="10" font-family="var(--sans)" text-anchor="middle" transform="rotate(30 175 275)">symptom</text>
+
+            <line x1="270" y1="210" x2="430" y2="320" stroke="#282420" stroke-width="1.5"/>
+            <text x="365" y="275" fill="#5c574e" font-size="10" font-family="var(--sans)" text-anchor="middle" transform="rotate(-30 365 275)">root cause</text>
+
+            <!-- Center node: State-Commit Failure -->
+            <g class="concept-node">
+              <circle cx="270" cy="200" r="48" fill="#d4943a" fill-opacity="0.15" stroke="#d4943a" stroke-width="2"/>
+              <text x="270" y="195" text-anchor="middle" fill="#d4943a" font-size="12" font-weight="700" font-family="var(--sans)">State-Commit</text>
+              <text x="270" y="211" text-anchor="middle" fill="#d4943a" font-size="12" font-weight="700" font-family="var(--sans)">Failure</text>
+            </g>
+
+            <!-- Context Collapse -->
+            <g class="concept-node">
+              <circle cx="110" cy="80" r="38" fill="#1a1a18" stroke="#282420" stroke-width="1.5"/>
+              <text x="110" y="76" text-anchor="middle" fill="#9e9889" font-size="10" font-weight="600" font-family="var(--sans)">Context</text>
+              <text x="110" y="90" text-anchor="middle" fill="#9e9889" font-size="10" font-weight="600" font-family="var(--sans)">Collapse</text>
+            </g>
+
+            <!-- Silent Data Loss -->
+            <g class="concept-node">
+              <circle cx="430" cy="80" r="38" fill="#1a1a18" stroke="#282420" stroke-width="1.5"/>
+              <text x="430" y="76" text-anchor="middle" fill="#9e9889" font-size="10" font-weight="600" font-family="var(--sans)">Silent Data</text>
+              <text x="430" y="90" text-anchor="middle" fill="#9e9889" font-size="10" font-weight="600" font-family="var(--sans)">Loss</text>
+            </g>
+
+            <!-- Token Blame -->
+            <g class="concept-node">
+              <circle cx="270" cy="50" r="34" fill="#1a1a18" stroke="#282420" stroke-width="1.5"/>
+              <text x="270" y="46" text-anchor="middle" fill="#9e9889" font-size="10" font-weight="600" font-family="var(--sans)">Token-Limit</text>
+              <text x="270" y="60" text-anchor="middle" fill="#9e9889" font-size="10" font-weight="600" font-family="var(--sans)">Blame</text>
+            </g>
+
+            <!-- Decision Regression -->
+            <g class="concept-node">
+              <circle cx="110" cy="330" r="38" fill="#1a1a18" stroke="#282420" stroke-width="1.5"/>
+              <text x="110" y="326" text-anchor="middle" fill="#9e9889" font-size="10" font-weight="600" font-family="var(--sans)">Decision</text>
+              <text x="110" y="340" text-anchor="middle" fill="#9e9889" font-size="10" font-weight="600" font-family="var(--sans)">Regression</text>
+            </g>
+
+            <!-- Replace Reducer -->
+            <g class="concept-node">
+              <circle cx="430" cy="330" r="38" fill="#1a1a18" stroke="#282420" stroke-width="1.5"/>
+              <text x="430" y="326" text-anchor="middle" fill="#9e9889" font-size="10" font-weight="600" font-family="var(--sans)">Replace</text>
+              <text x="430" y="340" text-anchor="middle" fill="#9e9889" font-size="10" font-weight="600" font-family="var(--sans)">Reducer</text>
+            </g>
+          </svg>
+        </div>
+      </section>
+
+      <section id="cta">
+        <div class="cta-box">
+          <p>Within 24 hours, add a state-diff log to one agent run. Print the full state object before and after every single merge. Grep for any field that loses data between steps. One log statement, one grep. The failure will show itself immediately.</p>
+        </div>
+      </section>
+    </article>
+  </main>
+</div>
+
+<footer>
+  <div class="footer-citations">
+    <strong>Citations</strong><br>
+    LangGraph documentation, "State Channels" section — "by default, the new value will override the existing value." LangChain, 2024–2025.<br>
+    Anthropic, "Building Effective Agents." anthropic.com/research/building-effective-agents, late 2024.<br>
+    Public user reports on Devin long-horizon task behavior, X/Twitter and blog posts, March–April 2025.
+  </div>
+  <div class="footer-bottom">
+    <a href="https://iggym.github.io/agentic-engineering/">agentic-engineering</a>
+    <button class="scroll-top-btn" id="scrollTopBtn" aria-label="Scroll to top">Back to top &uarr;</button>
+  </div>
+</footer>
+
+<script>
+(function() {
+  'use strict';
+
+  /* ── Progress bar ── */
+  var progressBar = document.getElementById('progress');
+  function updateProgress() {
+    var scrollTop = window.scrollY;
+    var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    var pct = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+    progressBar.style.width = pct + '%';
+    progressBar.setAttribute('aria-valuenow', Math.round(pct));
+  }
+  window.addEventListener('scroll', updateProgress, { passive: true });
+
+  /* ── TOC active state ── */
+  var tocLinks = document.querySelectorAll('#tocNav a');
+  var sections = [];
+  tocLinks.forEach(function(link) {
+    var id = link.getAttribute('href').slice(1);
+    var el = document.getElementById(id);
+    if (el) sections.push({ id: id, el: el, link: link });
+  });
+  function updateTocActive() {
+    var scrollPos = window.scrollY + 120;
+    var active = sections[0];
+    for (var i = 0; i < sections.length; i++) {
+      if (sections[i].el.offsetTop <= scrollPos) active = sections[i];
+    }
+    tocLinks.forEach(function(l) { l.classList.remove('active'); });
+    if (active) active.link.classList.add('active');
+  }
+  window.addEventListener('scroll', updateTocActive, { passive: true });
+  updateTocActive();
+
+  /* ── Hamburger / drawer ── */
+  var hamburger = document.getElementById('hamburger');
+  var drawer = document.getElementById('drawer');
+  var overlay = document.getElementById('drawerOverlay');
+  var drawerClose = document.getElementById('drawerClose');
+  function openDrawer() { drawer.classList.add('open'); overlay.classList.add('open'); }
+  function closeDrawer() { drawer.classList.remove('open'); overlay.classList.remove('open'); }
+  hamburger.addEventListener('click', openDrawer);
+  drawerClose.addEventListener('click', closeDrawer);
+  overlay.addEventListener('click', closeDrawer);
+  drawer.querySelectorAll('a').forEach(function(a) { a.addEventListener('click', closeDrawer); });
+
+  /* ── Share buttons ── */
+  var shareText = "Your agent didn't run out of context. Your state layer never committed. Every \"context collapse\" you've debugged was a state-commit failure wearing a token-limit disguise.";
+  var copyBtn = document.getElementById('copyShare');
+  copyBtn.addEventListener('click', function() {
+    navigator.clipboard.writeText(shareText).then(function() {
+      copyBtn.textContent = 'Copied';
+      copyBtn.classList.add('copied');
+      setTimeout(function() { copyBtn.textContent = 'Copy reframe'; copyBtn.classList.remove('copied'); }, 2000);
+    });
+  });
+  var xBtn = document.getElementById('xShare');
+  xBtn.addEventListener('click', function() {
+    window.open('https://x.com/intent/tweet?text=' + encodeURIComponent(shareText), '_blank', 'noopener');
+  });
+
+  /* ── Execution trace ── */
+  var traceDetails = [
+    { title: 'Planning', text: 'The agent receives the research task, decomposes it into three sub-queries, and decides to call the web search tool first. State: <code>{messages: [task], tool_results: []}</code>.', danger: false },
+    { title: 'Tool Call', text: 'The web search executes successfully, returning a list of relevant results. The raw response is available in the tool-call log. The state should now include <code>tool_results: [search_results_A]</code>.', danger: false },
+    { title: 'State Commit', text: '<span class="danger-label">Root Cause</span> — LangGraph\'s state channel receives the tool result and merges it using the <strong>default replace reducer</strong>. When the next tool returns results, <code>tool_results</code> is overwritten. The first result set is gone. No error. No warning. The state object silently shrank.', danger: true },
+    { title: 'Retrieval', text: 'On the next planning step, the model reads the current state. It sees <code>tool_results: [doc_results_B, db_results_C]</code>. It doesn\'t know it\'s missing data — from the model\'s perspective, the state is complete.', danger: false },
+    { title: 'Output', text: 'The final synthesis is built on incomplete state. It contradicts the first tool\'s results because those results aren\'t in the state anymore. The model didn\'t forget — the state layer never committed them.', danger: false }
+  ];
+  var traceLayers = document.querySelectorAll('.trace-layer');
+  var traceDetail = document.getElementById('traceDetail');
+  var dataLossIndicator = document.getElementById('dataLossIndicator');
+  var currentStep = -1;
+  var playInterval = null;
+
+  function setTraceStep(step) {
+    currentStep = step;
+    traceLayers.forEach(function(layer, i) {
+      if (i === step) {
+        layer.querySelector('rect').setAttribute('stroke-width', '2.5');
+        layer.querySelector('rect').setAttribute('stroke', i === 2 ? '#d45050' : '#d4943a');
+      } else {
+        var isRoot = i === 2;
+        layer.querySelector('rect').setAttribute('stroke-width', isRoot ? '2' : '1.5');
+        layer.querySelector('rect').setAttribute('stroke', isRoot ? '#d45050' : '#282420');
+      }
+    });
+    if (step >= 0 && step < traceDetails.length) {
+      var d = traceDetails[step];
+      traceDetail.innerHTML = '<strong>' + d.title + ':</strong> ' + d.text;
+      traceDetail.className = 'trace-detail' + (d.danger ? ' danger' : '');
+    }
+    dataLossIndicator.setAttribute('opacity', step === 2 ? '1' : '0');
+  }
+
+  traceLayers.forEach(function(layer, i) {
+    layer.addEventListener('click', function() { setTraceStep(i); stopPlay(); });
+    layer.addEventListener('keydown', function(e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setTraceStep(i); stopPlay(); } });
+  });
+
+  document.getElementById('tracePrev').addEventListener('click', function() {
+    stopPlay();
+    setTraceStep(currentStep <= 0 ? 4 : currentStep - 1);
+  });
+  document.getElementById('traceNext').addEventListener('click', function() {
+    stopPlay();
+    setTraceStep(currentStep >= 4 ? 0 : currentStep + 1);
+  });
+  document.getElementById('traceReveal').addEventListener('click', function() {
+    stopPlay();
+    setTraceStep(2);
+  });
+
+  var playBtn = document.getElementById('tracePlay');
+  function stopPlay() {
+    if (playInterval) { clearInterval(playInterval); playInterval = null; }
+    playBtn.textContent = 'Play';
+    playBtn.classList.remove('active');
+  }
+  playBtn.addEventListener('click', function() {
+    if (playInterval) { stopPlay(); return; }
+    playBtn.textContent = 'Pause';
+    playBtn.classList.add('active');
+    currentStep = -1;
+    playInterval = setInterval(function() {
+      currentStep++;
+      if (currentStep > 4) { currentStep = 0; }
+      setTraceStep(currentStep);
+    }, 1500);
+  });
+
+  /* ── Checklist (session persistent) ── */
+  var checklist = document.getElementById('checklist');
+  var checkState = {};
+  try { var stored = sessionStorage.getItem('agentic-checklist-never-committed'); if (stored) checkState = JSON.parse(stored); } catch(e) {}
+  var checkItems = checklist.querySelectorAll('.checklist-item');
+  checkItems.forEach(function(item) {
+    var id = item.getAttribute('data-id');
+    if (checkState[id]) item.classList.add('checked');
+    function toggle() {
+      item.classList.toggle('checked');
+      checkState[id] = item.classList.contains('checked');
+      try { sessionStorage.setItem('agentic-checklist-never-committed', JSON.stringify(checkState)); } catch(e) {}
+    }
+    item.addEventListener('click', toggle);
+    item.addEventListener('keydown', function(e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
+  });
+
+  /* ── Recall cards ── */
+  document.querySelectorAll('.recall-card').forEach(function(card) {
+    function flip() { card.classList.toggle('flipped'); }
+    card.addEventListener('click', flip);
+    card.addEventListener('keydown', function(e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); flip(); } });
+  });
+
+  /* ── Scroll to top ── */
+  document.getElementById('scrollTopBtn').addEventListener('click', function() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  updateProgress();
+})();
+</script>
+</body>
+</html>
