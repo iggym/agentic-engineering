@@ -7,5 +7,20 @@
     "audience": "Engineers building agent systems specifically",
     "description": "Patterns for orchestration, context isolation, tool use, and the harness that holds an agent together — diagnostic, implementation-focused, and scoped narrower than production-ai-patterns."
   },
-  "articles": []
+  "articles": [
+    {
+  "title": "Never Committed",
+  "hook": "Your agent didn't run out of context. Your state layer never committed.",
+  "date": "2025-04-15",
+  "status": "published",
+  "pinned": false,
+  "reading_time_minutes": 5,
+  "tags": ["state-management", "debugging", "langgraph", "memory", "diagnostic"],
+  "path": "articles/never-committed.html",
+  "id": "state-commit-001",
+  "slug": "never-committed",
+  "type": "diagnostic",
+  "research_window": ["2025-03-11", "2025-04-15"]
+}
+  ]
 }
