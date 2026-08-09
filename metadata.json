@@ -21,6 +21,19 @@
   "slug": "never-committed",
   "type": "diagnostic",
   "research_window": ["2025-03-11", "2025-04-15"]
+},{
+  "title": "Divide And Debug",
+  "hook": "Multi-agent orchestration isn't a capability upgrade; it is a debugging upgrade wearing a performance costume.",
+  "date": "2026-04-30",
+  "status": "published",
+  "pinned": false,
+  "reading_time_minutes": 6,
+  "tags": ["orchestration", "multi-agent", "harness-design", "supervisor-worker", "debugging"],
+  "path": "articles/divide-and-debug.html",
+  "id": "orch-layer-001",
+  "slug": "divide-and-debug",
+  "type": "diagnostic",
+  "research_window": ["2026-03-26", "2026-04-30"]
 }
   ]
 }
