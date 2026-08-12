@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stop Fixing Tool Syntax — Diagnostic Article</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0a0d12;
+      --bg-secondary: #12161f;
+      --bg-card: #181e2a;
+      --border-color: #262e40;
+      --border-highlight: #3b475e;
+      --text-primary: #f0f4fc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent-blue: #38bdf8;
+      --accent-purple: #a855f7;
+      --accent-amber: #f59e0b;
+      --accent-red: #ef4444;
+      --accent-green: #10b981;
+      --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+      --font-mono: 'Fira Code', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* Progress & Topbar */
+    #progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple));
+      width: 0%;
+      z-index: 1000;
+      transition: width 0.1s ease-out;
+    }
+
+    #topbar {
+      position: sticky;
+      top: 0;
+      background: rgba(10, 13, 18, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-color);
+      z-index: 900;
+      padding: 0.75rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+      color: var(--text-primary);
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    .nav-brand span {
+      color: var(--accent-blue);
+    }
+
+    .nav-breadcrumbs {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .nav-breadcrumbs a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .nav-breadcrumbs a:hover {
+      color: var(--accent-blue);
+    }
+
+    .reading-time {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      background: var(--bg-secondary);
+      padding: 0.25rem 0.6rem;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+    }
+
+    /* Layout Grid */
+    .page-wrapper {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 2.5rem;
+    }
+
+    @media (max-width: 960px) {
+      .page-wrapper {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Main Article */
+    main {
+      min-width: 0;
+    }
+
+    .hero {
+      margin-bottom: 2.5rem;
+    }
+
+    .hero-tag {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent-blue);
+      background: rgba(56, 189, 248, 0.1);
+      padding: 0.3rem 0.75rem;
+      border-radius: 4px;
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      margin-bottom: 1rem;
+    }
+
+    h1 {
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      margin-bottom: 1rem;
+      background: linear-gradient(135deg, #ffffff 30%, var(--text-secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-meta {
+      display: flex;
+      gap: 1rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+    }
+
+    /* Spectrum Widget */
+    .spectrum-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1.25rem;
+      margin: 1.5rem 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .spectrum-card::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: linear-gradient(180deg, var(--accent-blue), var(--accent-purple));
+    }
+
+    .spectrum-title {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .spectrum-content {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      line-height: 1.4;
+    }
+
+    /* Article Content Styling */
+    .article-body h2 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin: 2rem 0 1rem 0;
+      color: var(--text-primary);
+      letter-spacing: -0.01em;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .article-body p {
+      margin-bottom: 1.25rem;
+      color: var(--text-secondary);
+      font-size: 1.02rem;
+    }
+
+    .article-body blockquote {
+      border-left: 3px solid var(--accent-blue);
+      padding-left: 1rem;
+      margin: 1.5rem 0;
+      font-style: normal;
+      color: var(--text-primary);
+      font-weight: 500;
+      background: rgba(56, 189, 248, 0.03);
+      padding: 1rem;
+      border-radius: 0 6px 6px 0;
+    }
+
+    /* Centerpiece Widget */
+    .widget-container {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-highlight);
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin: 2rem 0;
+    }
+
+    .widget-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .widget-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .layer-stepper {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .step-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      padding: 0.6rem 0.4rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+    }
+
+    .step-btn:hover {
+      border-color: var(--accent-blue);
+      color: var(--text-primary);
+    }
+
+    .step-btn.active {
+      background: rgba(56, 189, 248, 0.15);
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
+    }
+
+    .step-btn.error-step {
+      border-color: rgba(239, 68, 68, 0.4);
+    }
+
+    .step-btn.error-step.active {
+      background: rgba(239, 68, 68, 0.15);
+      border-color: var(--accent-red);
+      color: var(--accent-red);
+    }
+
+    .trace-display {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      min-height: 180px;
+      position: relative;
+    }
+
+    .trace-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+
+    .trace-content {
+      color: var(--text-primary);
+      white-space: pre-wrap;
+    }
+
+    .interactive-recap {
+      margin-top: 1rem;
+      padding: 0.75rem;
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      border-radius: 6px;
+      font-size: 0.85rem;
+      color: var(--accent-amber);
+      display: none;
+    }
+
+    /* Scroll Reveal Beats */
+    .reveal-beat {
+      opacity: 0.4;
+      transform: translateY(15px);
+      transition: all 0.5s ease-out;
+      padding: 1rem;
+      border-left: 2px solid var(--border-color);
+      margin: 1.5rem 0;
+    }
+
+    .reveal-beat.visible {
+      opacity: 1;
+      transform: translateY(0);
+      border-left-color: var(--accent-blue);
+      background: rgba(18, 22, 31, 0.5);
+    }
+
+    /* Data Visualization */
+    .data-section {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1.25rem;
+      margin: 2rem 0;
+    }
+
+    .bar-chart {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+
+    .bar-item {
+      display: grid;
+      grid-template-columns: 140px 1fr 45px;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.8rem;
+    }
+
+    .bar-label {
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .bar-track {
+      background: var(--bg-primary);
+      height: 12px;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      background: var(--accent-blue);
+      width: 0%;
+      transition: width 1s ease-out;
+    }
+
+    .bar-fill.highlight {
+      background: var(--accent-purple);
+    }
+
+    .bar-val {
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      text-align: right;
+    }
+
+    /* Sidebar Widgets */
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .sidebar-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1.25rem;
+    }
+
+    .sidebar-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-secondary);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* Three Things Tracker */
+    .tracker-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .tracker-item {
+      font-size: 0.85rem;
+      padding: 0.6rem;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      transition: all 0.3s;
+    }
+
+    .tracker-item.unlocked {
+      color: var(--text-primary);
+      border-color: var(--accent-blue);
+      background: rgba(56, 189, 248, 0.05);
+    }
+
+    .tracker-icon {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 1px solid var(--text-muted);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.6rem;
+      margin-top: 0.1rem;
+      flex-shrink: 0;
+    }
+
+    .tracker-item.unlocked .tracker-icon {
+      border-color: var(--accent-blue);
+      background: var(--accent-blue);
+      color: var(--bg-primary);
+    }
+
+    /* Share Quotes */
+    .share-quote-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 0.85rem;
+      margin-bottom: 0.75rem;
+      font-size: 0.85rem;
+      color: var(--text-primary);
+    }
+
+    .share-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .share-btn {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      font-size: 0.7rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .share-btn:hover {
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
+    }
+
+    /* Checklist Widget */
+    .checklist {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin: 1.5rem 0;
+    }
+
+    .check-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      padding: 0.75rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+
+    .check-item input {
+      margin-top: 0.25rem;
+      accent-color: var(--accent-blue);
+    }
+
+    .check-item.checked {
+      color: var(--text-primary);
+      border-color: var(--accent-blue);
+    }
+
+    /* Recall Flip Cards */
+    .recall-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+
+    .recall-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 1rem;
+      cursor: pointer;
+    }
+
+    .recall-card .answer {
+      display: none;
+      margin-top: 0.5rem;
+      padding-top: 0.5rem;
+      border-top: 1px dashed var(--border-color);
+      color: var(--accent-blue);
+      font-size: 0.9rem;
+    }
+
+    .recall-card.flipped .answer {
+      display: block;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border-color);
+      padding: 2.5rem 1.5rem;
+      margin-top: 4rem;
+      background: var(--bg-secondary);
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .footer-content {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 1.5rem;
+    }
+
+    .footer-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+    }
+
+    .footer-links a:hover {
+      color: var(--accent-blue);
+    }
+
+    figcaption {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+      text-align: center;
+    }
+
+    @media prefers-reduced-motion: reduce {
+      * {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="progress-bar"></div>
+
+  <nav id="topbar">
+    <a href="https://iggym.github.io/agentic-engineering/" class="nav-brand">
+      <span>//</span> agentic-engineering
+    </a>
+    <div class="nav-breadcrumbs">
+      <a href="https://iggym.github.io/agentic-engineering/">Articles</a>
+      <span>/</span>
+      <span>Tool Diagnostics</span>
+    </div>
+    <div class="reading-time">4 min read</div>
+  </nav>
+
+  <div class="page-wrapper">
+    <main>
+      <article class="hero">
+        <span class="hero-tag">Diagnostic Report</span>
+        <h1>Stop Fixing Tool Syntax</h1>
+        <div class="hero-meta">
+          <span>Published: March 18, 2026</span>
+          <span>•</span>
+          <span>Target: Agent Systems Engineers</span>
+        </div>
+
+        <div class="spectrum-card">
+          <div class="spectrum-title">The Bold Reframe</div>
+          <div class="spectrum-content">
+            Your agent rarely breaks at tool execution; it breaks two layers upstream when context truncation feeds it half a truth.
+          </div>
+        </div>
+      </article>
+
+      <div class="article-body">
+        <p>The automated migration agent ran 412 consecutive <code>ALTER TABLE</code> commands between midnight and 4 AM. Every single payload returned a database execution error. By morning, the system had consumed $840 in API credits, generated thousands of error logs, and applied zero schema changes.</p>
+
+        <p>The postmortem team spent four hours tweaking prompt instructions and rewriting JSON schemas. They assumed the language model was failing to follow relational database syntax. They were looking at the wrong layer.</p>
+
+        <h2>Silent Fatal Echoes</h2>
+
+        <p>When an agent emits an invalid tool call, our instinct is to treat it as an instruction-following defect. We adjust parameters, tighten JSON schemas, and add error-handling prompts. This approach misses the core reality of agent mechanics.</p>
+
+        <blockquote>
+          Tool call errors are not instruction failures—they are echoes of invisible context dropouts.
+        </blockquote>
+
+        <p>When an agent receives truncated context, it does not stop operating. It bridges the gap using plausible structural inference. If a schema retrieval step clips foreign key constraints at byte 4096, the model does not know data was dropped. It sees a complete table definition missing relational keys and constructs a query matching that truncated reality. The resulting database execution error looks like bad syntax, but the parameter generation was completely logical given the input tokens.</p>
+
+        <p>In cognitive science, working memory overload causes individuals to fill informational gaps with structural guesses—a process called confabulation under load. Language models exhibit identical behavior when context boundaries cut off key parameters. The model fills the missing structural space with plausible arguments, creating a clean syntax wrapper around missing data.</p>
+
+        <!-- Centerpiece Interactive Execution Trace Widget -->
+        <figure class="widget-container">
+          <div class="widget-header">
+            <div class="widget-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+              Execution Layer Diagnostic Trace
+            </div>
+            <span style="font-size:0.75rem; color:var(--text-muted)">Step through layers to isolate root cause</span>
+          </div>
+
+          <div class="layer-stepper">
+            <button class="step-btn active" onclick="setTraceStep(0)">1. Plan</button>
+            <button class="step-btn" id="step-btn-1" onclick="setTraceStep(1)">2. Retrieval</button>
+            <button class="step-btn" onclick="setTraceStep(2)">3. Payload</button>
+            <button class="step-btn error-step" onclick="setTraceStep(3)">4. Execute</button>
+            <button class="step-btn error-step" onclick="setTraceStep(4)">5. Loop</button>
+          </div>
+
+          <div class="trace-display">
+            <span class="trace-label" id="trace-step-label">Layer 1: Planning Layer</span>
+            <div class="trace-content" id="trace-step-content">Plan verified: Goal is adding constraint fk_user_id to table 'orders'.</div>
+          </div>
+
+          <div class="interactive-recap" id="trace-recap">
+            ⚠️ <strong>Interactive Discovery:</strong> Click "Inspect Raw Context" in Step 2 to reveal where the foreign key definitions were dropped!
+          </div>
+          <figcaption>Figure 1: Interactive execution trace revealing retrieval truncation causing downstream execution error.</figcaption>
+        </figure>
+
+        <h2>Upstream Noise Kills</h2>
+
+        <div class="reveal-beat" id="beat-1">
+          <p><strong>[BEAT 1] Perspective Shift:</strong></p>
+          <p>BEFORE: Blaming tool argument syntax errors on parser failures or model non-compliance.</p>
+
+          <p>AFTER: Recognizing that bad parameters stem directly from missing retrieval tokens upstream.</p>
+        </div>
+
+        <p>Consider what happens during a code refactoring task. A software engineering agent uses a file editor tool to patch a target repository. The execution layer rejects the patch with a line mismatch error.</p>
+
+        <p>The developer's initial response is to modify the tool parser or tell the model to pay closer attention to line numbers. But inspecting the execution trace reveals the real breakdown. The file retrieval component clipped the source code file at 120 lines to stay within a sub-agent token budget. The model generated accurate line offsets for the 120 lines it received. The patch failed because the tool parser evaluated the diff against the 300-line file on disk.</p>
+
+        <!-- Data Visualization Layer -->
+        <div class="data-section">
+          <div class="widget-title" style="margin-bottom:0.5rem;">
+            Failure Mode Attribution Breakdown
+          </div>
+          <div style="font-size:0.8rem; color:var(--text-muted)">Based on postmortem analysis of 120+ failed agent runs</div>
+          <div class="bar-chart">
+            <div class="bar-item">
+              <span class="bar-label">Retrieval Truncation</span>
+              <div class="bar-track"><div class="bar-fill highlight" style="width: 68%;"></div></div>
+              <span class="bar-val">68%</span>
+            </div>
+            <div class="bar-item">
+              <span class="bar-label">Schema Ambiguity</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 18%;"></div></div>
+              <span class="bar-val">18%</span>
+            </div>
+            <div class="bar-item">
+              <span class="bar-label">Model Reasoning</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 10%;"></div></div>
+              <span class="bar-val">10%</span>
+            </div>
+            <div class="bar-item">
+              <span class="bar-label">API Timeouts</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 4%;"></div></div>
+              <span class="bar-val">4%</span>
+            </div>
+          </div>
+          <figcaption>Figure 2: Empirical breakdown of root causes in agent execution failures.</figcaption>
+        </div>
+
+        <h2>The Diagnostic Pivot</h2>
+
+        <div class="reveal-beat" id="beat-2">
+          <p><strong>[BEAT 2] Perspective Shift:</strong></p>
+          <p>BEFORE: Adding backoff retry loops around tool execution calls.</p>
+          <p>AFTER: Invalidating upstream retrieval cache before re-executing model calls.</p>
+        </div>
+
+        <p>The most destructive failure mode in agent design is the static retry loop. When a tool execution returns an error, typical frameworks feed that error text directly back to the model and request a corrected tool call.</p>
+
+        <p>If the original tool payload was generated from truncated context, re-running the model with the same context guarantees failure. The model receives the exact same incomplete inputs alongside an error message telling it its previous choice was wrong. Lacking new information, it alters parameters arbitrarily, shifting line numbers or swapping field names while keeping the underlying mistake intact.</p>
+
+        <h2>Autopsy Before Retrying</h2>
+
+        <p>Diagnosing agent failures requires tracing tool parameters backward through the execution pipeline. Instead of inspecting tool output, audit the inputs using a structured diagnostic checklist.</p>
+
+        <div class="checklist">
+          <label class="check-item" onclick="toggleCheck(this)">
+            <input type="checkbox">
+            <span>Extract failed tool call JSON payload and isolate parameters.</span>
+          </label>
+          <label class="check-item" onclick="toggleCheck(this)">
+            <input type="checkbox">
+            <span>Map every payload parameter to explicit source tokens in retrieved context.</span>
+          </label>
+          <label class="check-item" onclick="toggleCheck(this)">
+            <input type="checkbox">
+            <span>Inspect context window logs for truncated schemas or missing lines.</span>
+          </label>
+          <label class="check-item" onclick="toggleCheck(this)">
+            <input type="checkbox">
+            <span>Verify if error handling invalidates upstream retrieval cache on failure.</span>
+          </label>
+        </div>
+
+        <h2>Fix Context First</h2>
+
+        <p>Stop rewriting function descriptions when tool calls break. Inspect the context boundaries that fed those calls.</p>
+
+        <p>Spend 30 minutes today auditing your agent system's last ten tool execution failures. Trace each failed tool argument back to the raw tokens present in the prompt context at that exact step. If you find a single parameter that was inferred because of context truncation, replace your tool retry logic with an upstream context refresh call.</p>
+
+        <!-- Recall Practice -->
+        <h2 style="margin-top:2.5rem;">Retrieval Practice</h2>
+        <div class="recall-grid">
+          <div class="recall-card" onclick="this.classList.toggle('flipped')">
+            <strong>Q: Why does retrying a failed tool call with static context cause failure loops?</strong>
+            <div class="answer">Answer: Because the model is forced to re-derive parameters from the exact same truncated tokens that caused the initial error.</div>
+          </div>
+          <div class="recall-card" onclick="this.classList.toggle('flipped')">
+            <strong>Q: What is parameter provenance tracing?</strong>
+            <div class="answer">Answer: Mapping every JSON field in a tool call back to explicit tokens in the prompt context to detect hallucinated arguments.</div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <!-- Tracker -->
+      <div class="sidebar-card">
+        <div class="sidebar-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          Key Insights Unlocked
+        </div>
+        <div class="tracker-list">
+          <div class="tracker-item" id="insight-1">
+            <span class="tracker-icon">1</span>
+            <span>Upstream truncation triggers 68% of tool failures.</span>
+          </div>
+          <div class="tracker-item" id="insight-2">
+            <span class="tracker-icon">2</span>
+            <span>Static context retries lock in failure loops.</span>
+          </div>
+          <div class="tracker-item" id="insight-3">
+            <span class="tracker-icon">3</span>
+            <span>Parameter provenance slashes debug time.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Share Quotes -->
+      <div class="sidebar-card">
+        <div class="sidebar-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          Shareable Takeaways
+        </div>
+
+        <div class="share-quote-box">
+          "Your agent rarely breaks at tool execution; it breaks two layers upstream when context truncation feeds it half a truth."
+          <div class="share-actions">
+            <a href="https://twitter.com/intent/tweet?text=Your%20agent%20rarely%20breaks%20at%20tool%20execution%3B%20it%20breaks%20two%20layers%20upstream%20when%20context%20truncation%20feeds%20it%20half%20a%20truth.&url=https://iggym.github.io/agentic-engineering/" target="_blank" class="share-btn">Share on X</a>
+            <a href="https://www.linkedin.com/sharing/share-offsite/?url=https://iggym.github.io/agentic-engineering/" target="_blank" class="share-btn">LinkedIn</a>
+          </div>
+        </div>
+
+        <div class="share-quote-box">
+          "Tool call errors are not instruction failures—they are echoes of invisible context dropouts."
+          <div class="share-actions">
+            <a href="https://twitter.com/intent/tweet?text=Tool%20call%20errors%20are%20not%20instruction%20failures%E2%80%94they%20are%20echoes%20of%20invisible%20context%20dropouts.&url=https://iggym.github.io/agentic-engineering/" target="_blank" class="share-btn">Share on X</a>
+            <a href="https://www.linkedin.com/sharing/share-offsite/?url=https://iggym.github.io/agentic-engineering/" target="_blank" class="share-btn">LinkedIn</a>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <footer>
+    <div class="footer-content">
+      <div>
+        <strong>agentic-engineering</strong> — Diagnostic Series
+      </div>
+      <div class="footer-links">
+        <a href="https://iggym.github.io/agentic-engineering/">Home</a>
+        <a href="#" onclick="window.scrollTo({top:0, behavior:'smooth'}); return false;">Back to Top</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Scroll Progress
+    window.addEventListener('scroll', () => {
+      const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+      const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      const scrolled = (winScroll / height) * 100;
+      document.getElementById('progress-bar').style.width = scrolled + '%';
+
+      // Unlock insights on scroll
+      if (scrolled > 20) document.getElementById('insight-1').classList.add('unlocked');
+      if (scrolled > 50) document.getElementById('insight-2').classList.add('unlocked');
+      if (scrolled > 80) document.getElementById('insight-3').classList.add('unlocked');
+    });
+
+    // Trace Stepper Data
+    const traceSteps = [
+      {
+        label: "Layer 1: Planning Layer",
+        content: "PLAN VERIFIED:\nTarget Goal: Add FOREIGN KEY fk_user_id to table 'orders'.\nAction: Fetch schema and generate migration payload."
+      },
+      {
+        label: "Layer 2: Upstream Retrieval Layer (ROOT CAUSE)",
+        content: "RETRIEVAL LOG [TRUNCATED]:\nCREATE TABLE orders (\n  id INT PRIMARY KEY,\n  total DECIMAL(10,2)\n);\n-- [TRUNCATED AT BYTE 4096: Foreign key constraints dropped from context window]"
+      },
+      {
+        label: "Layer 3: Tool Payload Generation",
+        content: "GENERATED TOOL PAYLOAD:\n{\n  \"tool\": \"execute_sql\",\n  \"args\": {\n    \"query\": \"ALTER TABLE orders ADD CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id)\"\n  }\n}\nNote: Model inferred 'user_id' parameter because definition was dropped upstream."
+      },
+      {
+        label: "Layer 4: Tool Execution Layer (VISIBLE SYMPTOM)",
+        content: "EXECUTION ERROR RETURNED:\nPostgreSQL Error 42703: column \"user_id\" of relation \"orders\" does not exist.\nResult: Tool Call Rejected."
+      },
+      {
+        label: "Layer 5: Error Loop Layer (FAILURE SPIRAL)",
+        content: "RETRY LOOP DETECTED:\nAgent retries tool call with static context...\nAttempt 2: Swapping column name to 'usr_id'...\nAttempt 3: Re-formatting SQL syntax...\nResult: 412 failed API calls ($840 credit burn)."
+      }
+    ];
+
+    let inspectedContext = false;
+
+    function setTraceStep(index) {
+      document.querySelectorAll('.layer-stepper .step-btn').forEach((btn, i) => {
+        btn.classList.toggle('active', i === index);
+      });
+
+      const labelEl = document.getElementById('trace-step-label');
+      const contentEl = document.getElementById('trace-step-content');
+      const recapEl = document.getElementById('trace-recap');
+
+      labelEl.textContent = traceSteps[index].label;
+      contentEl.textContent = traceSteps[index].content;
+
+      if (index === 1 && !inspectedContext) {
+        inspectedContext = true;
+        recapEl.style.display = 'block';
+      }
+    }
+
+    // Scroll Observer for Beats
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.3 });
+
+    document.querySelectorAll('.reveal-beat').forEach(beat => observer.observe(beat));
+
+    // Checklist persistence
+    function toggleCheck(el) {
+      const checkbox = el.querySelector('input');
+      el.classList.toggle('checked', checkbox.checked);
+    }
+  </script>
+</body>
+</html>
