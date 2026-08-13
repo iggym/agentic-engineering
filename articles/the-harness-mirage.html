@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Harness Mirage: Agentic Engineering</title>
+  <style>
+    :root {
+      --bg: #0d0f12;
+      --card-bg: #16191e;
+      --accent: #3b82f6;
+      --accent-fail: #ef4444;
+      --accent-success: #10b981;
+      --text: #e2e8f0;
+      --text-muted: #94a3b8;
+      --border: #262b35;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: var(--font-sans); line-height: 1.6; padding-bottom: 80px; }
+
+    #progress { position: fixed; top: 0; left: 0; height: 3px; background: var(--accent); width: 0%; z-index: 1000; }
+    #topbar { position: sticky; top: 0; background: rgba(13, 15, 18, 0.85); backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; z-index: 900; }
+    #topbar a { color: var(--text); text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+
+    .container { max-width: 1100px; margin: 40px auto; padding: 0 24px; display: grid; grid-template-columns: 1fr 300px; gap: 40px; }
+    @media (max-width: 880px) { .container { grid-template-columns: 1fr; } }
+
+    header { margin-bottom: 32px; grid-column: 1 / -1; }
+    h1 { font-size: 2.5rem; line-height: 1.2; margin-bottom: 12px; color: #fff; }
+    .meta { font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-muted); }
+
+    .content { min-width: 0; }
+    p { margin-bottom: 20px; font-size: 1.05rem; }
+    
+    .pull-quote { background: var(--card-bg); border-left: 4px solid var(--accent); padding: 20px; margin: 28px 0; border-radius: 0 8px 8px 0; }
+    .pull-quote p { font-size: 1.15rem; font-weight: 500; margin-bottom: 12px; color: #fff; }
+    .share-actions { display: flex; gap: 12px; font-size: 0.85rem; }
+    .share-btn { background: var(--border); color: var(--text); border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+    .share-btn:hover { background: var(--accent); color: #fff; }
+
+    /* Trace Widget */
+    .widget-box { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin: 32px 0; }
+    .widget-title { font-family: var(--font-mono); font-size: 0.9rem; color: var(--accent); text-transform: uppercase; margin-bottom: 16px; }
+    .stage-nav { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 12px; margin-bottom: 20px; }
+    .stage-tab { background: var(--bg); border: 1px solid var(--border); color: var(--text-muted); padding: 8px 14px; border-radius: 6px; font-family: var(--font-mono); font-size: 0.8rem; cursor: pointer; white-space: nowrap; }
+    .stage-tab.active { border-color: var(--accent); color: #fff; background: rgba(59, 130, 246, 0.1); }
+    .stage-tab.fail-stage.active { border-color: var(--accent-fail); background: rgba(239, 68, 68, 0.1); }
+
+    .stage-display { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 20px; min-height: 140px; position: relative; }
+    .stage-status { font-family: var(--font-mono); font-size: 0.8rem; display: inline-block; padding: 2px 8px; border-radius: 4px; margin-bottom: 8px; }
+    .status-ok { background: rgba(16, 185, 129, 0.2); color: var(--accent-success); }
+    .status-fail { background: rgba(239, 68, 68, 0.2); color: var(--accent-fail); }
+
+    /* Glitch Signature Effect */
+    .glitch-effect { animation: glitch 0.3s ease-in-out infinite; }
+    @keyframes glitch {
+      0% { transform: translate(0) }
+      20% { transform: translate(-2px, 2px) }
+      40% { transform: translate(-2px, -2px) }
+      60% { transform: translate(2px, 2px) }
+      80% { transform: translate(2px, -2px) }
+      100% { transform: translate(0) }
+    }
+
+    /* Checklist Widget */
+    .checklist { list-style: none; margin: 20px 0; }
+    .checklist li { background: var(--card-bg); border: 1px solid var(--border); padding: 12px 16px; border-radius: 6px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; }
+    .checklist input { accent-color: var(--accent); width: 18px; height: 18px; }
+
+    sidebar { position: sticky; top: 80px; height: fit-content; }
+    .tracker { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 20px; }
+    .tracker-title { font-size: 0.9rem; font-weight: 600; margin-bottom: 12px; }
+    .tracker-item { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+    .tracker-item.unlocked { color: var(--accent-success); }
+
+    @media (prefers-reduced-motion: reduce) {
+      .glitch-effect { animation: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="progress"></div>
+
+  <nav id="topbar">
+    <a href="https://iggym.github.io/agentic-engineering/">← Agentic Engineering</a>
+    <span class="meta">Diagnostic Article #0416</span>
+  </nav>
+
+  <div class="container">
+    <header>
+      <h1>The Harness Mirage: Why Your Agent Infrastructure Is Lying to You</h1>
+      <div class="meta">Published April 16, 2026 · 6 min read · Stage Focus: VERIFY</div>
+    </header>
+
+    <main class="content">
+      <p>Before looking at model weights, context window sizes, or reasoning benchmarks, look at the harness.</p>
+
+      <p>When Princeton NLP published their analysis on SWE-agent trajectory logs, the failure patterns were stark. Engineers spent weeks tweaking system prompts to stop subagent execution loops from hallucinating terminal commands. Yet, 42% of recorded benchmark failures didn't originate from model reasoning errors. They came from environment state leakage during the execution loop.</p>
+
+      <!-- Trace Diagram Centerpiece -->
+      <div class="widget-box" id="trace-widget">
+        <div class="widget-title">// Interactive Execution Trace Stage Explorer</div>
+        <div class="stage-nav">
+          <button class="stage-tab active" onclick="setStage('planning')">1. PLANNING</button>
+          <button class="stage-tab" onclick="setStage('tool_call')">2. TOOL CALL</button>
+          <button class="stage-tab" onclick="setStage('retrieval')">3. RETRIEVAL</button>
+          <button class="stage-tab" onclick="setStage('execute')">4. EXECUTE</button>
+          <button class="stage-tab fail-stage" onclick="setStage('verify')">5. VERIFY</button>
+          <button class="stage-tab" onclick="setStage('output')">6. OUTPUT</button>
+        </div>
+        <div class="stage-display" id="stage-display">
+          <!-- JS dynamic content -->
+        </div>
+        <figcaption style="margin-top:12px; font-size:0.8rem; color:var(--text-muted);">
+          Interactive Trace Loop: Clicking through execution stages reveals the precise point where state corruption bypasses verification.
+        </figcaption>
+      </div>
+
+      <div class="pull-quote" id="quote-1">
+        <p>"The Harness Mirage: The architectural illusion that increasing model intelligence fixes system failures, when the root cause is actually an unconstrained execution harness passing invalid state across loop iterations."</p>
+        <div class="share-actions">
+          <button class="share-btn" onclick="shareQuote(1, 'x')">Share to X</button>
+          <button class="share-btn" onclick="shareQuote(1, 'linkedin')">Share to LinkedIn</button>
+          <button class="share-btn" onclick="copyPermalink(1)">Copy Link</button>
+        </div>
+      </div>
+
+      <p>Every agent failure propagates through the exact same six-stage execution loop: <code>PLANNING</code> → <code>TOOL CALL</code> → <code>RETRIEVAL</code> → <code>EXECUTE</code> → <code>VERIFY</code> → <code>OUTPUT</code>.</p>
+
+      <p>When an agent fails, developers usually blame the LLM's reasoning at the <code>PLANNING</code> stage. But in production systems, <code>PLANNING</code> is rarely where the death spiral starts.</p>
+
+      <h3>Triage Checklist for Harness Reliability</h3>
+      <ul class="checklist">
+        <li>
+          <input type="checkbox" id="c1" onchange="toggleCheck('c1')">
+          <label for="c1"><strong>[RETRIEVAL]</strong> Implement session-scoped context firewalls between subagents.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="c2" onchange="toggleCheck('c2')">
+          <label for="c2"><strong>[EXECUTE]</strong> Ephemeral container resets on dirty execution state exit codes.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="c3" onchange="toggleCheck('c3')">
+          <label for="c3"><strong>[VERIFY]</strong> Enforce deterministic state-diff checks over LLM self-judgment.</label>
+        </li>
+      </ul>
+    </main>
+
+    <sidebar>
+      <div class="tracker">
+        <div class="tracker-title">Key Insights Unlocked</div>
+        <div class="tracker-item" id="insight-1">✓ Loop compilers > Model Moats</div>
+        <div class="tracker-item" id="insight-2">✓ Verification failure hides state drift</div>
+        <div class="tracker-item" id="insight-3">✓ Context firewalls prevent corruption</div>
+      </div>
+    </sidebar>
+  </div>
+
+  <script>
+    const stages = {
+      planning: { title: "PLANNING", status: "OK", statusClass: "status-ok", body: "Subagent receives user objective and decomposes into shell/edit steps cleanly." },
+      tool_call: { title: "TOOL CALL", status: "OK", statusClass: "status-ok", body: "Tool schema formatted correctly. Command passed down to bash runner." },
+      retrieval: { title: "RETRIEVAL", status: "OK", statusClass: "status-ok", body: "Retrieved local worktree state. Dirty context environment present from previous run." },
+      execute: { title: "EXECUTE", status: "DIRTY STATE INJECTED", statusClass: "status-fail", body: "Bash command executed inside polluted worktree. Execution returned exit code 0." },
+      verify: { title: "VERIFY (THE HARNESS MIRAGE)", status: "MISMATCH / FAILURE", statusClass: "status-fail", glitch: true, body: "LLM-as-a-judge check evaluates output string format. Returns PASS despite polluted DB/file state!" },
+      output: { title: "OUTPUT", status: "PROPAGATED CORRUPTION", statusClass: "status-fail", body: "Corrupted worktree marked as 'Task Completed Successfully' and handed off downstream." }
+    };
+
+    function setStage(stageKey) {
+      const data = stages[stageKey];
+      const display = document.getElementById('stage-display');
+      
+      document.querySelectorAll('.stage-tab').forEach(tab => {
+        tab.classList.remove('active');
+        if(tab.getAttribute('onclick').includes(stageKey)) tab.classList.add('active');
+      });
+
+      let glitchClass = data.glitch ? 'glitch-effect' : '';
+
+      display.innerHTML = `
+        <div class="${glitchClass}">
+          <span class="stage-status ${data.statusClass}">${data.status}</span>
+          <h4 style="margin-bottom:8px; color:#fff;">${data.title}</h4>
+          <p style="font-size:0.95rem; color:var(--text-muted);">${data.body}</p>
+        </div>
+      `;
+
+      window.location.hash = `stage=${stageKey}`;
+    }
+
+    // Handle hash loading
+    window.addEventListener('load', () => {
+      const hash = window.location.hash;
+      if (hash.includes('stage=')) {
+        const stage = hash.split('stage=')[1];
+        if (stages[stage]) setStage(stage);
+      } else {
+        setStage('planning');
+      }
+    });
+
+    // Scroll Progress
+    window.addEventListener('scroll', () => {
+      const total = document.documentElement.scrollHeight - window.innerHeight;
+      const progress = (window.scrollY / total) * 100;
+      document.getElementById('progress').style.width = `${progress}%`;
+    });
+
+    function shareQuote(id, platform) {
+      const text = encodeURIComponent(document.querySelector(`#quote-${id} p`).innerText);
+      const url = encodeURIComponent(window.location.href.split('#')[0] + `?quote=${id}`);
+      if(platform === 'x') window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`);
+      if(platform === 'linkedin') window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`);
+    }
+
+    function copyPermalink(id) {
+      const url = window.location.href.split('#')[0] + `?quote=${id}`;
+      navigator.clipboard.writeText(url);
+      alert('Permalink copied to clipboard!');
+    }
+
+    function toggleCheck(id) {
+      const checked = document.getElementById(id).checked;
+      localStorage.setItem(id, checked);
+    }
+  </script>
+</body>
+</html>
