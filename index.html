@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agentic Engineering</title>
+<meta name="description" content="Orchestration, context, and tool use for agents built to work, not demo.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0D1117;
+  --bg-raised:#12161C;
+  --bg-card:#151A21;
+  --ink:#DDE3EA;
+  --ink-dim:#8B93A1;
+  --ink-faint:#565E6C;
+  --amber:#FFB454;
+  --cyan:#6FD3E8;
+  --stamp:#E8604C;
+  --grid-line:rgba(111,211,232,0.06);
+  --hair:rgba(221,227,234,0.12);
+  --display:'Space Grotesk',sans-serif;
+  --body:'IBM Plex Sans',sans-serif;
+  --mono:'IBM Plex Mono',monospace;
+  --radius:2px;
+}
+*{box-sizing:border-box;}
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; scroll-behavior:auto !important;}
+}
+html{scroll-behavior:smooth;}
+body{
+  margin:0; background:var(--bg); color:var(--ink); font-family:var(--body); line-height:1.6;
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size:34px 34px;
+}
+a{color:inherit;}
+:focus-visible{outline:2px solid var(--cyan); outline-offset:2px;}
+::selection{background:var(--amber); color:#12161C;}
+
+/* ---------- Title block ---------- */
+.titleblock{
+  border-bottom:1px solid var(--hair);
+  background:linear-gradient(180deg, rgba(13,17,23,0.4), transparent 60%);
+}
+.tb-row{
+  max-width:1080px; margin:0 auto; padding:14px 24px;
+  display:flex; justify-content:space-between; align-items:center;
+  font-family:var(--mono); font-size:11px; color:var(--ink-faint); letter-spacing:0.04em;
+}
+.tb-row .doc-id{color:var(--cyan);}
+.tb-row .live{display:flex; align-items:center; gap:7px; color:var(--amber);}
+.led{width:6px; height:6px; border-radius:50%; background:var(--amber); box-shadow:0 0 6px var(--amber); animation:blink 1.8s ease-in-out infinite;}
+@keyframes blink{ 0%,100%{opacity:1;} 50%{opacity:0.25;} }
+
+header.hero{ max-width:1080px; margin:0 auto; padding:56px 24px 10px; position:relative; }
+.corner{position:absolute; width:14px; height:14px; border:1px solid var(--ink-faint); opacity:.5;}
+.corner.tl{top:24px; left:24px; border-right:none; border-bottom:none;}
+.corner.tr{top:24px; right:24px; border-left:none; border-bottom:none;}
+.eyebrow{ font-family:var(--mono); font-size:11px; color:var(--cyan); letter-spacing:0.16em; text-transform:uppercase; margin-bottom:18px; }
+.eyebrow::before{content:"§ "; color:var(--ink-faint);}
+h1{ font-family:var(--display); font-weight:700; font-size:clamp(2.1rem,5.2vw,3.4rem); margin:0 0 16px; letter-spacing:-0.01em;}
+.tagline{ font-size:1.08rem; color:#B7BEC8; max-width:600px; margin:0 0 8px; }
+.desc{ font-family:var(--mono); font-size:13px; color:var(--ink-dim); max-width:560px; margin:16px 0 0; line-height:1.7; }
+
+/* ---------- Pipeline diagram / nav ---------- */
+.pipeline{ max-width:1080px; margin:52px auto 0; padding:0 24px; }
+.pipeline-label{ font-family:var(--mono); font-size:10.5px; color:var(--ink-faint); letter-spacing:0.14em; text-transform:uppercase; margin-bottom:10px; display:flex; justify-content:space-between; }
+.pipeline-label .hint{color:var(--ink-faint); text-transform:none; letter-spacing:0;}
+.pipeline svg{ width:100%; height:auto; display:block; cursor:default; }
+.stage-hit{ cursor:pointer; }
+.stage-ring{ fill:var(--bg-raised); stroke:var(--hair); stroke-width:1.3; transition:stroke .25s ease, fill .25s ease; }
+.stage-hit:hover .stage-ring, .stage-hit:focus .stage-ring, .stage-hit.active .stage-ring{ stroke:var(--cyan); fill:rgba(111,211,232,0.06); }
+.stage-label{ font-family:var(--mono); font-size:10px; fill:var(--ink-dim); text-anchor:middle; pointer-events:none; transition:fill .2s ease; }
+.stage-hit:hover .stage-label, .stage-hit.active .stage-label{ fill:var(--cyan); }
+.trace-path{ stroke:var(--hair); stroke-width:1.3; fill:none; }
+.packet{ fill:var(--amber); filter:drop-shadow(0 0 4px var(--amber)); }
+.packet1{ offset-path:path('M60,60 L220,60 L220,150 L380,150 L380,60 L540,60'); animation:travel 5s linear infinite; }
+@keyframes travel{ 0%{offset-distance:0%; opacity:0;} 6%{opacity:1;} 94%{opacity:1;} 100%{offset-distance:100%; opacity:0;} }
+.pipeline-note{ font-family:var(--mono); font-size:11px; color:var(--ink-faint); margin-top:8px; min-height:16px; }
+.pipeline-note b{color:var(--cyan); font-weight:500;}
+
+/* ---------- Terminal filter bar ---------- */
+.console{
+  max-width:1080px; margin:44px auto 0; padding:0 24px;
+}
+.console-shell{
+  background:var(--bg-raised); border:1px solid var(--hair); border-radius:var(--radius);
+  font-family:var(--mono); font-size:13px; display:flex; align-items:center; gap:8px;
+  padding:11px 14px; color:var(--ink);
+}
+.console-shell .prompt{color:var(--amber);}
+.console-shell input{
+  flex:1; background:none; border:none; color:var(--ink); font-family:var(--mono); font-size:13px;
+  outline:none; caret-color:var(--amber);
+}
+.console-shell input::placeholder{color:var(--ink-faint);}
+.console-shell .clear-btn{
+  background:none; border:1px solid var(--hair); color:var(--ink-faint); font-family:var(--mono);
+  font-size:10.5px; padding:4px 8px; border-radius:var(--radius); cursor:pointer; letter-spacing:.04em;
+  display:none;
+}
+.console-shell .clear-btn:hover{ border-color:var(--stamp); color:var(--stamp); }
+.console-shell.filtering .clear-btn{display:inline-block;}
+
+/* ---------- Main / feed ---------- */
+main{ max-width:1080px; margin:0 auto; padding:44px 24px 100px; }
+.section-label{
+  font-family:var(--mono); font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:var(--ink-faint);
+  border-bottom:1px solid var(--hair); padding-bottom:10px; margin-bottom:26px;
+  display:flex; justify-content:space-between; align-items:baseline;
+}
+.section-label span.count{color:var(--cyan);}
+
+.grid-feed{ display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:20px; }
+
+.card{
+  position:relative; background:var(--bg-card); border:1px solid var(--hair); border-radius:var(--radius);
+  padding:24px 22px 22px; text-decoration:none; color:inherit; overflow:hidden;
+  transition:border-color .2s ease, transform .2s ease, box-shadow .2s ease;
+  opacity:0; transform:translateY(10px);
+}
+.card.in-view{ opacity:1; transform:translateY(0); transition:opacity .5s ease, border-color .2s ease, transform .5s ease, box-shadow .2s ease; }
+.card:hover{ border-color:var(--cyan); box-shadow:0 10px 28px rgba(0,0,0,0.35); transform:translateY(-2px); }
+.card.pinned{ grid-column:1/-1; background:linear-gradient(135deg, rgba(111,211,232,0.05), var(--bg-card) 55%); border-color:rgba(111,211,232,0.3); }
+.card.hidden-by-filter{ display:none; }
+
+.case-no{ position:absolute; top:16px; right:18px; font-family:var(--mono); font-size:10px; color:var(--ink-faint); letter-spacing:.05em; }
+
+.stamp{
+  position:absolute; top:20px; right:20px; font-family:var(--mono); font-weight:600; font-size:10px;
+  letter-spacing:.12em; padding:4px 9px; border:1.5px solid currentColor; border-radius:3px;
+  transform:rotate(-6deg); text-transform:uppercase; opacity:0.9;
+}
+.stamp.resolved{ color:var(--ink-faint); }
+.stamp.entry{ color:var(--amber); border-color:var(--amber); }
+
+.card-meta{ font-family:var(--mono); font-size:10.5px; color:var(--ink-faint); display:flex; gap:12px; margin:22px 0 14px; }
+.status-chip{ display:inline-flex; align-items:center; gap:5px; }
+.status-chip .sdot{ width:5px; height:5px; border-radius:50%; background:var(--amber); box-shadow:0 0 4px var(--amber); }
+
+h2{ font-family:var(--display); font-weight:700; font-size:1.22rem; margin:0 0 10px; letter-spacing:-0.005em; }
+p.hook{ font-size:14.5px; color:#AEB4BF; margin:0 0 16px; min-height:1.6em; }
+.hook .cursor{ display:inline-block; width:7px; height:1em; background:var(--amber); vertical-align:text-bottom; margin-left:1px; animation:blink 1s steps(1) infinite; }
+
+.tags{ display:flex; gap:6px; flex-wrap:wrap; filter:blur(3px); opacity:.55; transition:filter .3s ease, opacity .3s ease; }
+.card:hover .tags, .card:focus-within .tags{ filter:blur(0); opacity:1; }
+.tag-pill{ font-family:var(--mono); font-size:9.5px; color:var(--ink-dim); border:1px solid var(--hair); padding:3px 8px; border-radius:20px; }
+
+.empty{ text-align:center; padding:70px 20px; color:var(--ink-faint); grid-column:1/-1; font-family:var(--mono); }
+.empty .glyph{ color:var(--stamp); margin-bottom:10px; font-size:1rem; letter-spacing:.08em; border:1px solid var(--stamp); display:inline-block; padding:4px 10px; border-radius:3px; transform:rotate(-4deg); }
+
+/* ---------- Footer / log line ---------- */
+footer{ border-top:1px solid var(--hair); padding:36px 24px 44px; text-align:center; }
+footer p{ font-size:13.5px; color:var(--ink-dim); max-width:520px; margin:0 auto 16px; }
+footer .logline{ font-family:var(--mono); font-size:11px; color:var(--ink-faint); letter-spacing:.04em; margin-bottom:18px; }
+footer .logline .clock{color:var(--cyan);}
+footer a.home{ font-family:var(--mono); font-size:12px; color:var(--cyan); text-decoration:none; border-bottom:1px solid var(--cyan); padding-bottom:2px; }
+
+@media (max-width:640px){
+  .pipeline{display:none;}
+  h1{font-size:2rem;}
+}
+</style>
+</head>
+<body>
+
+<div class="titleblock">
+  <div class="tb-row">
+    <span class="doc-id">DOC // agentic-engineering/index</span>
+    <span class="live"><span class="led"></span>trace: live</span>
+  </div>
+</div>
+
+<header class="hero">
+  <span class="corner tl" aria-hidden="true"></span>
+  <span class="corner tr" aria-hidden="true"></span>
+  <div class="eyebrow">Orchestration · Context · Tool Use</div>
+  <h1>Agentic Engineering</h1>
+  <p class="tagline" id="site-tagline">Orchestration, context, and tool use for agents built to work, not demo.</p>
+  <p class="desc" id="site-desc">Patterns for orchestration, context isolation, tool use, and the harness that holds an agent together.</p>
+</header>
+
+<div class="pipeline">
+  <div class="pipeline-label"><span>Execution trace</span><span class="hint">click a stage to filter reports</span></div>
+  <svg viewBox="0 0 600 200" role="img" aria-label="Agent execution pipeline: planner, tool call, retrieval, execute, verify, output">
+    <path class="trace-path" d="M60,60 L220,60 L220,150 L380,150 L380,60 L540,60"/>
+    <g class="stage-hit" data-stage="planner" tabindex="0" role="button" aria-pressed="false">
+      <circle class="stage-ring" cx="60" cy="60" r="24"/>
+      <text class="stage-label" x="60" y="106">planner</text>
+    </g>
+    <g class="stage-hit" data-stage="tool" tabindex="0" role="button" aria-pressed="false">
+      <circle class="stage-ring" cx="220" cy="60" r="24"/>
+      <text class="stage-label" x="220" y="106">tool call</text>
+    </g>
+    <g class="stage-hit" data-stage="retrieval" tabindex="0" role="button" aria-pressed="false">
+      <circle class="stage-ring" cx="220" cy="150" r="24"/>
+      <text class="stage-label" x="220" y="196">retrieval</text>
+    </g>
+    <g class="stage-hit" data-stage="execute" tabindex="0" role="button" aria-pressed="false">
+      <circle class="stage-ring" cx="380" cy="150" r="24"/>
+      <text class="stage-label" x="380" y="196">execute</text>
+    </g>
+    <g class="stage-hit" data-stage="verify" tabindex="0" role="button" aria-pressed="false">
+      <circle class="stage-ring" cx="380" cy="60" r="24"/>
+      <text class="stage-label" x="380" y="106">verify</text>
+    </g>
+    <g class="stage-hit" data-stage="output" tabindex="0" role="button" aria-pressed="false">
+      <circle class="stage-ring" cx="540" cy="60" r="24"/>
+      <text class="stage-label" x="540" y="106">output</text>
+    </g>
+    <circle class="packet packet1" r="4"/>
+  </svg>
+  <div class="pipeline-note" id="pipeline-note">&nbsp;</div>
+</div>
+
+<div class="console">
+  <div class="console-shell" id="console-shell">
+    <span class="prompt">$</span>
+    <input id="filter-input" type="text" placeholder="grep --tag=&hellip; or type to search reports" autocomplete="off" spellcheck="false" aria-label="Filter field reports">
+    <button class="clear-btn" id="clear-filter" type="button">clear ×</button>
+  </div>
+</div>
+
+<main>
+  <div class="section-label"><span>Field Reports</span><span class="count" id="feed-count">loading…</span></div>
+  <div class="grid-feed" id="feed"></div>
+</main>
+
+<footer>
+  <p id="footer-desc">Agentic Engineering — the agent-implementation layer of an eight-repo portfolio on running AI in production.</p>
+  <div class="logline">END OF TRANSMISSION · <span class="clock" id="clock"></span></div>
+  <a class="home" href="https://iggym.github.io/agentic-engineering/">Back to top ↑</a>
+</footer>
+
+<script>
+(function(){
+  const feedEl = document.getElementById('feed');
+  const countEl = document.getElementById('feed-count');
+  const descEl = document.getElementById('site-desc');
+  const footerDescEl = document.getElementById('footer-desc');
+  const filterInput = document.getElementById('filter-input');
+  const consoleShell = document.getElementById('console-shell');
+  const clearBtn = document.getElementById('clear-filter');
+  const pipelineNote = document.getElementById('pipeline-note');
+  const stageHits = Array.from(document.querySelectorAll('.stage-hit'));
+  const clockEl = document.getElementById('clock');
+
+  let allArticles = [];
+  let activeStage = null;
+
+  function fmtDate(iso){ try{ return new Date(iso+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }catch(e){return iso;} }
+
+  function caseNo(a, idx){
+    const year = (a.date||'').slice(0,4) || '----';
+    return 'CASE ' + year + '-' + String(idx+1).padStart(3,'0');
+  }
+
+  function cardHTML(a, idx, isPinned){
+    const tags = (a.tags||[]).map(t=>`<span class="tag-pill" data-tag="${t.toLowerCase()}">${t}</span>`).join('');
+    const tagString = (a.tags||[]).join(' ').toLowerCase();
+    const stampClass = isPinned ? 'entry' : 'resolved';
+    const stampText = isPinned ? 'ENTRY POINT' : 'RESOLVED';
+    return `
+    <a class="card ${isPinned?'pinned':''}" href="${a.path}" data-tags="${tagString}" data-title="${(a.title||'').toLowerCase()}" data-hook="${(a.hook||'').toLowerCase()}">
+      <span class="case-no">${caseNo(a, idx)}</span>
+      <span class="stamp ${stampClass}">${stampText}</span>
+      <div class="card-meta"><span class="status-chip"><span class="sdot"></span>logged</span><span>${fmtDate(a.date)}</span><span>${a.reading_time_minutes||'—'} min read</span></div>
+      <h2>${a.title}</h2>
+      <p class="hook" data-full="${(a.hook||'').replace(/"/g,'&quot;')}"></p>
+      <div class="tags">${tags}</div>
+    </a>`;
+  }
+
+  function render(published, site){
+    if(site && site.description){ descEl.textContent = site.description; footerDescEl.textContent = site.description; }
+    allArticles = published;
+    if(published.length === 0){
+      feedEl.innerHTML = '<div class="empty"><div class="glyph">NO ENTRIES ON RECORD</div>first field report is in flight</div>';
+      countEl.textContent = '0'; return;
+    }
+    const pinned = published.filter(a=>a.pinned);
+    const rest = published.filter(a=>!a.pinned).sort((a,b)=>new Date(b.date)-new Date(a.date));
+    countEl.textContent = published.length;
+    let html='';
+    let i=0;
+    pinned.forEach(a=>{ html += cardHTML(a,i,true); i++; });
+    rest.forEach(a=>{ html += cardHTML(a,i,false); i++; });
+    feedEl.innerHTML = html;
+    typeHooks();
+    observeCards();
+    applyFilter();
+  }
+
+  // typewriter reveal for hook text, staggered
+  function typeHooks(){
+    const hooks = Array.from(document.querySelectorAll('.hook'));
+    hooks.forEach((el, i)=>{
+      const full = el.getAttribute('data-full') || '';
+      let pos = 0;
+      const speed = 14;
+      const delay = i * 120;
+      setTimeout(function step(){
+        el.textContent = full.slice(0, pos);
+        if(pos < full.length){
+          const cursor = document.createElement('span');
+          cursor.className='cursor';
+          el.appendChild(cursor);
+          pos++;
+          setTimeout(step, speed);
+        }
+      }, delay);
+    });
+  }
+
+  function observeCards(){
+    const cards = Array.from(document.querySelectorAll('.card'));
+    if(!('IntersectionObserver' in window)){
+      cards.forEach(c=>c.classList.add('in-view'));
+      return;
+    }
+    const io = new IntersectionObserver((entries)=>{
+      entries.forEach(entry=>{
+        if(entry.isIntersecting){
+          entry.target.classList.add('in-view');
+          io.unobserve(entry.target);
+        }
+      });
+    }, {threshold:0.12});
+    cards.forEach(c=>io.observe(c));
+  }
+
+  // prefetch article on hover — warm the cache before the click lands
+  const prefetched = new Set();
+  feedEl.addEventListener('mouseover', function(e){
+    const card = e.target.closest('.card');
+    if(!card) return;
+    const href = card.getAttribute('href');
+    if(href && !prefetched.has(href)){
+      prefetched.add(href);
+      fetch(href, {mode:'same-origin'}).catch(function(){});
+    }
+  });
+
+  function applyFilter(){
+    const q = (filterInput.value || '').trim().toLowerCase().replace(/^grep\s+(--tag=)?/,'');
+    const cards = Array.from(document.querySelectorAll('.card'));
+    let visible = 0;
+    cards.forEach(card=>{
+      const haystack = card.getAttribute('data-tags') + ' ' + card.getAttribute('data-title') + ' ' + card.getAttribute('data-hook');
+      const stageOk = !activeStage || haystack.indexOf(activeStage) !== -1;
+      const queryOk = !q || haystack.indexOf(q) !== -1;
+      const show = stageOk && queryOk;
+      card.classList.toggle('hidden-by-filter', !show);
+      if(show) visible++;
+    });
+    consoleShell.classList.toggle('filtering', !!(q || activeStage));
+    countEl.textContent = visible + (visible !== allArticles.length ? ' / ' + allArticles.length : '');
+
+    if(visible === 0 && allArticles.length > 0){
+      if(!document.getElementById('no-match')){
+        const div = document.createElement('div');
+        div.id='no-match';
+        div.className='empty';
+        div.style.gridColumn='1/-1';
+        div.innerHTML = '<div class="glyph">NO MATCH</div>no reports tagged for this query — try another stage or clear the filter';
+        feedEl.appendChild(div);
+      }
+    } else {
+      const nm = document.getElementById('no-match');
+      if(nm) nm.remove();
+    }
+  }
+
+  filterInput.addEventListener('input', applyFilter);
+  clearBtn.addEventListener('click', function(){
+    filterInput.value = '';
+    activeStage = null;
+    stageHits.forEach(s=>{ s.classList.remove('active'); s.setAttribute('aria-pressed','false'); });
+    pipelineNote.innerHTML = '&nbsp;';
+    applyFilter();
+    filterInput.focus();
+  });
+
+  const stageHints = {
+    planner: 'planning traces — decomposition, task graphs, delegation.',
+    tool: 'tool-call traces — function calling, argument binding, schema drift.',
+    retrieval: 'retrieval traces — memory, context assembly, grounding.',
+    execute: 'execution traces — side effects, state commits, harness behavior.',
+    verify: 'verification traces — evals, guardrails, output checking.',
+    output: 'output traces — final delivery, formatting, handoff.'
+  };
+
+  function toggleStage(stage){
+    const wasActive = activeStage === stage;
+    activeStage = wasActive ? null : stage;
+    stageHits.forEach(s=>{
+      const on = s.getAttribute('data-stage') === activeStage;
+      s.classList.toggle('active', on);
+      s.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+    pipelineNote.innerHTML = activeStage
+      ? 'filtering on <b>' + activeStage + '</b> — ' + (stageHints[activeStage] || '')
+      : '&nbsp;';
+    applyFilter();
+  }
+
+  stageHits.forEach(s=>{
+    s.addEventListener('click', ()=>toggleStage(s.getAttribute('data-stage')));
+    s.addEventListener('keydown', (e)=>{
+      if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); toggleStage(s.getAttribute('data-stage')); }
+    });
+  });
+
+  // live clock — ambient, quiet proof the page is "running"
+  function tickClock(){
+    const now = new Date();
+    const iso = now.toISOString().replace('T',' ').slice(0,19) + 'Z';
+    clockEl.textContent = iso;
+  }
+  tickClock();
+  setInterval(tickClock, 1000);
+
+  fetch('./metadata.json')
+    .then(function(res){ if(!res.ok) throw new Error('not found'); return res.json(); })
+    .then(function(data){ render((data.articles||[]).filter(function(a){return a.status==='published';}), data.site); })
+    .catch(function(){
+      feedEl.innerHTML = '<div class="empty"><div class="glyph">NO ENTRIES ON RECORD</div>first field report is in flight</div>';
+    });
+})();
+</script>
+</body>
+</html>
