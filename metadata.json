@@ -157,6 +157,36 @@
       "research_window": "2025-12-15 – 2026-02-13",
       "coined_term": "moat trap",
       "trace_stages": ["planning", "tool_call", "retrieval", "execute", "verify", "output"]
-    }
+    }, {
+  "id": "0212",
+  "slug": "diagnosing-the-phantom-argument",
+  "title": "Diagnosing the Phantom Argument",
+  "hook": "Your tool call didn't fail because the model is dumb. It failed because of a Phantom Argument—a parameter ghostwritten by a 3-day-old RAG index.",
+  "path": "articles/diagnosing-the-phantom-argument.html",
+  "date": "2026-02-12",
+  "status": "published",
+  "format": "diagnostic",
+  "tags": ["tool-use", "retrieval", "debugging", "root-cause"],
+  "reading_time_minutes": 10,
+  "pinned": false,
+  "research_window": "2026-01-08 to 2026-02-12",
+  "coined_term": "Phantom Argument",
+  "trace_stages": ["planning","tool_call","retrieval","execute","verify","output"]
+}, {
+  "id": "0148",
+  "slug": "green-light-lie-eval-failure",
+  "title": "The Green-Light Lie: Your Agent Passed Eval and Failed the Job",
+  "hook": "We grade agents like chatbots — final answer correct — while trajectory failures, harness variance, and flawed verifiers make leaderboards lie.",
+  "path": "articles/green-light-lie-eval-failure.html",
+  "date": "2026-02-10",
+  "status": "published",
+  "format": "diagnostic",
+  "tags": ["evaluation", "verify-gap", "trajectory-eval", "swe-bench"],
+  "reading_time_minutes": 7,
+  "pinned": false,
+  "research_window": "2025-12-30 to 2026-02-10",
+  "coined_term": "green-light lie",
+  "trace_stages": ["planning","tool_call","retrieval","execute","verify","output"]
+}
   ]
 }
