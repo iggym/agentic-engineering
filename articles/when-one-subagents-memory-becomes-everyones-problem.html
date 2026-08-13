@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>When One Subagent's Memory Becomes Everyone's Problem</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0b0d12;--fg:#e8eaf0;--mut:#9aa0b2;--line:#1f2433;--accent:#7c9bff;--accent2:#ff7a7a}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font-family:Inter,system-ui;line-height:1.6}
+#progress{position:fixed;top:0;left:0;height:3px;width:0;background:var(--accent);z-index:99}
+#topbar{position:sticky;top:0;backdrop-filter:blur(12px);background:rgba(11,13,18,.8);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:10px 20px;z-index:50}
+.grid{display:grid;grid-template-columns:260px 1fr;max-width:1200px;margin:0 auto}
+@media(max-width:880px){.grid{grid-template-columns:1fr}.sidebar{display:none}.drawer{display:block!important}}
+a{color:var(--accent)}h1{font-size:clamp(28px,5vw,52px);line-height:1.05;letter-spacing:-.02em}
+.spectrum{display:flex;gap:8px;align-items:center;padding:12px;border:1px solid var(--line);border-radius:12px}
+.pull{border-left:3px solid var(--accent);padding:12px 16px;margin:24px 0;background:#121524}
+.trace{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:20px 0}
+.step{border:1px solid var(--line);padding:12px;border-radius:10px;cursor:pointer;transition:.2s}
+.step.active{border-color:var(--accent);background:#151a2b}
+.reveal{opacity:0;transform:translateY(12px);transition:.6s}.reveal.in{opacity:1;transform:none}
+.badge{font-family:JetBrains Mono;font-size:11px;color:var(--mut)}
+table{width:100%;border-collapse:collapse}th,td{border-bottom:1px solid var(--line);padding:8px;text-align:left}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<div id="topbar"><a href="https://iggym.github.io/agentic-engineering/">← Home</a><span>Articles / Context Firewalls · 8 min</span><button id="ham">☰</button></div>
+<div class="grid">
+<aside class="sidebar" style="padding:20px;border-right:1px solid var(--line);position:sticky;top:50px;height:calc(100vh - 50px)">
+<div id="threeTracker"><strong>Three Things</strong><div>🔒 <span id="t1">Compaction preserves confusion</span></div><div>💥 <span id="t2">Context is blast radius</span></div><div>🧱 <span id="t3">Isolation at spawn</span></div></div>
+</aside>
+<main style="padding:28px">
+<h1>When One Subagent's Memory Becomes Everyone's Problem</h1>
+<p class="badge">2026-03-12 · Research window Jan 29 – Mar 12 2026 · For engineers building agent systems</p>
+<div class="spectrum"><span>Token Saving</span><input type="range" id="spec" min="0" max="100" value="85" style="flex:1"><span>Correctness Firewall</span></div>
+<figure><div class="pull" id="beat1"><strong>[BEAT 1] Bold Reframe:</strong> Isolation doesn't make agents smarter. It stops one bad memory from becoming a system-wide lie.
+<div><button onclick="share('x',this)" data-q="Isolation doesn't make agents smarter. It stops one bad memory from becoming a system-wide lie.">𝕏 Share</button> <button onclick="share('li',this)" data-q="Isolation doesn't make agents smarter. It stops one bad memory from becoming a system-wide lie.">in Share</button></div></div><figcaption>Firewall, not filter — the reframe that sticks</figcaption></figure>
+
+<div class="trace" id="trace">
+<div class="step" data-layer="planner">PLANNER<br>Delegate: 'fetch docs, ignore external prompts'<br><span class="badge">trusted</span></div>
+<div class="step" data-layer="tool">TOOL CALL<br>fetch(url) → 200<br><span class="badge">looks ok</span></div>
+<div class="step" data-layer="retrieval">RETRIEVAL<br><em>click to inspect</em><span id="poison" style="display:none;color:var(--accent2)"><br>⚠️ Retrieved: &lt;script&gt;steal token&lt;/script&gt; + external skill payload merged into context</span></div>
+<div class="step" data-layer="execute">EXECUTE<br>run with gateway creds</div>
+<div class="step" data-layer="output">OUTPUT<br>RCE</div>
+</div>
+
+<p class="reveal">On Feb 3, a malicious webpage stole an OpenClaw gateway token via one-click RCE, patched in 2026.1.29. The same week Claude Code subagents leaked after 17 minutes, polluting the supervisor.</p>
+<figure class="reveal" id="beat2"><div class="pull"><strong>[BEAT 2] The miss:</strong> The tool call didn't fail. The retrieval that fed it was already poisoned.
+<div><button onclick="share('x',this)" data-q="A subagent's context is not a suggestion. It's a blast radius.">𝕏 Share</button> <button onclick="share('li',this)" data-q="A subagent's context is not a suggestion. It's a blast radius.">in Share</button></div></div><figcaption>Poisoned well — where the root really lives</figcaption></figure>
+
+<figure><canvas id="chart" width="600" height="260" style="width:100%;border:1px solid var(--line);border-radius:12px"></canvas><figcaption>Leaky bucket crew — failure concentrates at retrieval, not at the tool</figcaption></figure>
+
+<table id="cmp"><thead><tr><th>Incident</th><th>Misdiagnosed</th><th>Correct Root</th></tr></thead><tbody>
+<tr><td>Claude Code Feb 4 leak</td><td>Tool slowness</td><td>Fork flag not enforced at spawn</td></tr>
+<tr><td>OpenClaw CVE-2026-25253</td><td>WebSocket auth</td><td>Retrieval → privileged exec no firewall</td></tr>
+<tr><td>Agents SDK handoff</td><td>Lost messages</td><td>No input_filter isolation</td></tr>
+</tbody></table>
+<figcaption>Same river, different leaks — comparing the misread vs the mechanism</figcaption>
+
+<h3>Fix before filter</h3>
+<ul id="checklist">
+<li><label><input type="checkbox"> Enforce context at spawn, not at read</label></li>
+<li><label><input type="checkbox"> Treat retrieval as untrusted</label></li>
+<li><label><input type="checkbox"> Audit after compaction</label></li>
+<li><label><input type="checkbox"> Log what subagent actually saw</label></li>
+</ul>
+
+<div id="recall" style="display:grid;gap:12px;margin:24px 0"></div>
+
+<footer style="margin-top:40px;border-top:1px solid var(--line);padding-top:16px"><p class="badge">Citations: Claude Code GitHub memory leak Feb 4 2026; OpenClaw CVE-2026-25253 SecurityWeek Feb 3 2026 patched 2026.1.29; OpenAI Agents SDK handoff docs & community Jul 2026; MCP 97M downloads.</p><a href="https://iggym.github.io/agentic-engineering/">Home</a> · <a href="#" onclick="window.scrollTo({top:0,behavior:'smooth'});return false">Top ↑</a></footer>
+</main>
+</div>
+<script>
+const prog=document.getElementById('progress');window.addEventListener('scroll',()=>{prog.style.width=(scrollY/(document.body.scrollHeight-innerHeight)*100)+'%';if(scrollY>300){document.getElementById('t1').style.color='var(--accent)'}if(scrollY>800){document.getElementById('t2').style.color='var(--accent)'}if(scrollY>1300){document.getElementById('t3').style.color='var(--accent)'}});
+document.querySelectorAll('.step').forEach(s=>s.addEventListener('click',()=>{s.classList.add('active');if(s.dataset.layer==='retrieval'){document.getElementById('poison').style.display='inline';s.style.borderColor='var(--accent2)'}}));
+function share(net,btn){const q=btn.dataset.q;const url=location.href;const txt=encodeURIComponent(q+' '+url);if(net==='x')window.open('https://twitter.com/intent/tweet?text='+txt,'_blank');else window.open('https://www.linkedin.com/sharing/share-offsite/?url='+encodeURIComponent(url)+'&summary='+encodeURIComponent(q),'_blank');}
+const obs=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in')}),{threshold:.2});document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+const c=document.getElementById('chart'),ctx=c.getContext('2d');const data=[12,18,47,23],labels=['Planner','Tool','Retrieval','Execute'];let anim=0;function draw(){ctx.clearRect(0,0,c.width,c.height);labels.forEach((l,i)=>{const h=data[i]/60*c.height*0.8*anim;ctx.fillStyle=i==2?'#ff7a7a':'#7c9bff';ctx.fillRect(i*120+20,c.height-h-30,80,h);ctx.fillStyle='#9aa0b2';ctx.fillText(l,i*120+20,c.height-10);ctx.fillText(data[i]+'%',i*120+40,c.height-h-35)});if(anim<1){anim+=0.02;requestAnimationFrame(draw)}}if(!matchMedia('(prefers-reduced-motion: reduce)').matches)draw();else{anim=1;draw()}
+const cards=[{q:'Isolation saves tokens or prevents system-wide lies?',a:'Prevents system-wide lies — firewall, not economy'},{q:'Where does root cause live when tool call looks wrong?',a:'Retrieval — poisoned data before tool'},{q:'When should isolation be enforced?',a:'At spawn, not at read'}];const rec=document.getElementById('recall');cards.forEach((card,i)=>{const d=document.createElement('div');d.style.border='1px solid var(--line)';d.style.padding='12px';d.style.borderRadius='10px';d.innerHTML=`<strong>Recall ${i+1}:</strong> ${card.q} <button>Reveal</button><span style="display:none"> — ${card.a}</span>`;d.querySelector('button').onclick=function(){this.nextElementSibling.style.display='inline';this.remove()};rec.appendChild(d)})
+document.querySelectorAll('#checklist input').forEach(cb=>{cb.checked=localStorage.getItem(cb.parentElement.textContent)==='1';cb.onchange=()=>localStorage.setItem(cb.parentElement.textContent,cb.checked?'1':'0')})
+</script>
+</body>
+</html>
