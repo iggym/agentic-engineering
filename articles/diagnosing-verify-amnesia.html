@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diagnosing Verify Amnesia | Agentic Engineering</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface-2: #21262d;
+    --text: #c9d1d9;
+    --text-muted: #8b949e;
+    --accent: #58a6ff;
+    --danger: #f85149;
+    --success: #3fb950;
+    --warning: #d29922;
+    --glass: rgba(22, 27, 34, 0.7);
+    --border: #30363d;
+    --stage-plan: #a371f7;
+    --stage-tool: #f78166;
+    --stage-retrieve: #d29922;
+    --stage-exec: #3fb950;
+    --stage-verify: #f85149;
+    --stage-output: #58a6ff;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Topbar */
+  #topbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--glass);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0.75rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  #topbar .brand { font-weight: 700; color: var(--text); text-decoration: none; }
+  #topbar .meta { font-size: 0.85rem; color: var(--text-muted); display: flex; gap: 1rem; align-items: center; }
+  .hamburger { display: none; background: none; border: none; color: var(--text); font-size: 1.5rem; cursor: pointer; }
+
+  #progress {
+    position: fixed;
+    top: 55px;
+    left: 0;
+    height: 3px;
+    background: var(--accent);
+    width: 0%;
+    z-index: 101;
+    transition: width 0.1s linear;
+  }
+
+  /* Layout */
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 3rem;
+  }
+
+  main { min-width: 0; }
+  aside { position: sticky; top: 80px; align-self: start; }
+
+  h1 { font-size: 2.5rem; line-height: 1.2; margin-bottom: 1rem; letter-spacing: -0.02em; }
+  h2 { font-size: 1.5rem; margin-top: 2.5rem; margin-bottom: 1rem; color: var(--text); }
+  p { margin-bottom: 1.25rem; color: var(--text); }
+  strong { color: #fff; }
+
+  a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border 0.2s; }
+  a:hover { border-bottom-color: var(--accent); }
+
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--surface-2);
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+    color: var(--warning);
+  }
+
+  /* Pull Quotes */
+  .pull-quote {
+    border-left: 4px solid var(--accent);
+    padding: 1.5rem;
+    background: var(--surface);
+    margin: 2rem 0;
+    font-size: 1.25rem;
+    font-weight: 500;
+    position: relative;
+  }
+  .pq-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+  .pq-actions button {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    padding: 0.4rem 0.8rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .pq-actions button:hover { color: var(--text); border-color: var(--accent); }
+
+  /* Widget */
+  .trace-widget {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 2rem;
+    margin: 3rem 0;
+  }
+  .stages {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    position: relative;
+  }
+  .stages::before {
+    content: '';
+    position: absolute;
+    top: 20px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--border);
+    z-index: 0;
+  }
+  .stage-node {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--surface-2);
+    border: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 1;
+    transition: all 0.3s;
+    position: relative;
+  }
+  .stage-node.active {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: #fff;
+    transform: scale(1.1);
+  }
+  .stage-node.verify-glitch {
+    animation: glitch 0.5s cubic-bezier(.25, .46, .45, .94) both;
+    border-color: var(--danger);
+    background: var(--danger);
+  }
+  @keyframes glitch {
+    0% { transform: translate(0) scale(1.1); }
+    20% { transform: translate(-3px, 3px) scale(1.1); }
+    40% { transform: translate(-3px, -3px) scale(1.1); }
+    60% { transform: translate(3px, 3px) scale(1.1); }
+    80% { transform: translate(3px, -3px) scale(1.1); }
+    100% { transform: translate(0) scale(1.1); }
+  }
+
+  .stage-label {
+    position: absolute;
+    bottom: -25px;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  .trace-content {
+    min-height: 150px;
+    background: var(--surface-2);
+    padding: 1.5rem;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+  }
+
+  .scrubber {
+    width: 100%;
+    margin-top: 1.5rem;
+    accent-color: var(--accent);
+  }
+
+  .ledger-drop {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: rgba(248, 81, 73, 0.1);
+    border: 1px solid var(--danger);
+    border-radius: 6px;
+    display: none;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--danger);
+  }
+  .ledger-drop.visible { display: block; }
+
+  /* Data Storytelling */
+  .chart-container {
+    background: var(--surface);
+    padding: 2rem;
+    border-radius: 8px;
+    margin: 2rem 0;
+  }
+  .bar-group { display: flex; align-items: flex-end; gap: 2rem; height: 200px; margin-top: 1rem; }
+  .bar {
+    flex: 1;
+    background: var(--accent);
+    position: relative;
+    transition: height 1s ease-out;
+    border-radius: 4px 4px 0 0;
+  }
+  .bar.danger { background: var(--danger); }
+  .bar-label {
+    position: absolute;
+    bottom: -25px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+  .bar-value {
+    position: absolute;
+    top: -25px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-weight: 600;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 2rem 0;
+    background: var(--surface);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  th, td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  th { background: var(--surface-2); color: var(--text-muted); font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  tr:last-child td { border-bottom: none; }
+
+  /* Checklist */
+  .checklist { list-style: none; }
+  .checklist li {
+    padding: 1rem;
+    background: var(--surface);
+    margin-bottom: 0.5rem;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    cursor: pointer;
+    border: 1px solid var(--border);
+  }
+  .checklist li.checked { text-decoration: line-through; color: var(--text-muted); border-color: var(--success); }
+  .stage-tag {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  .tag-plan { background: rgba(163, 113, 247, 0.2); color: var(--stage-plan); }
+  .tag-tool { background: rgba(247, 129, 102, 0.2); color: var(--stage-tool); }
+  .tag-verify { background: rgba(248, 81, 73, 0.2); color: var(--stage-verify); }
+  .tag-output { background: rgba(88, 166, 255, 0.2); color: var(--stage-output); }
+
+  /* Reveals */
+  .reveal { opacity: 0; transform: translateY(20px); transition: all 0.8s ease; }
+  .reveal.revealed { opacity: 1; transform: translateY(0); }
+
+  figure { margin: 2rem 0; }
+  figcaption { font-size: 0.85rem; color: var(--text-muted); font-style: italic; margin-top: 0.5rem; }
+
+  /* Footer */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 3rem 1.5rem;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+  .scroll-top { margin-top: 1rem; cursor: pointer; display: inline-block; }
+
+  /* Responsive */
+  @media (max-width: 880px) {
+    .container { grid-template-columns: 1fr; }
+    aside { position: static; border-top: 1px solid var(--border); padding-top: 2rem; }
+    .hamburger { display: block; }
+    .desktop-nav { display: none; }
+    h1 { font-size: 2rem; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .reveal { opacity: 1; transform: none; transition: none; }
+    .bar { transition: none; }
+    .stage-node.verify-glitch { animation: none; border-color: var(--danger); background: var(--danger); }
+  }
+</style>
+</head>
+<body>
+
+<header id="topbar">
+  <a href="https://iggym.github.io/agentic-engineering/" class="brand">Agentic Engineering</a>
+  <div class="meta desktop-nav">
+    <span>Diagnostic</span>
+    <span>·</span>
+    <span>10 min read</span>
+  </div>
+  <button class="hamburger">☰</button>
+</header>
+<div id="progress"></div>
+
+<div class="container">
+  <main>
+    <h1>Diagnosing <strong>Verify Amnesia</strong></h1>
+    <p class="subtitle">Why your agent isn't failing because it's dumb, but because it's opaque.</p>
+
+    <section class="reveal">
+      <p>A startup founder messaged a framework maintainer six weeks post-acquisition. The OpenAI bill for one weekend was $4,200 <a href="https://medium.com/@sattyamjain96/the-agent-that-burned-4-200-in-63-hours-a-production-ai-postmortem-d38fd9586a85" target="_blank" rel="noopener">[3]</a>.</p>
+      <p>The logs revealed a monolithic agent loop attempting to sync order data to a CRM. The sequence was mechanically perfect, and entirely catastrophic:</p>
+      
+      <div class="trace-widget" id="trace-widget">
+        <div class="stages" id="stages-nav">
+          <div class="stage-node active" data-stage="plan"><span class="stage-label">Plan</span></div>
+          <div class="stage-node" data-stage="tool"><span class="stage-label">Tool</span></div>
+          <div class="stage-node" data-stage="retrieve"><span class="stage-label">Retrieve</span></div>
+          <div class="stage-node" data-stage="exec"><span class="stage-label">Execute</span></div>
+          <div class="stage-node" data-stage="verify"><span class="stage-label">Verify</span></div>
+          <div class="stage-node" data-stage="output"><span class="stage-label">Output</span></div>
+        </div>
+        
+        <div class="trace-content" id="trace-content">
+          <p id="trace-text">1. <strong>PLANNING:</strong> The agent set the goal to sync data.</p>
+        </div>
+
+        <div class="ledger-drop" id="ledger-drop">
+          > LEDGER REVEAL: Iteration #4,800 | Cumulative Cost: $4,200 | Recursion Depth: MAX
+        </div>
+
+        <input type="range" min="0" max="5" value="0" class="scrubber" id="scrubber">
+      </div>
+
+      <p>This loop repeated 4,800 times per hour for 63 hours <a href="https://medium.com/@sattyamjain96/the-agent-that-burned-4-200-in-63-hours-a-production-ai-postmortem-d38fd9586a85" target="_blank" rel="noopener">[3]</a>. The failure did not originate at the tool call—the API did exactly what it was supposed to do under load. The failure originated at the Verify stage, which suffered from <strong>Verify Amnesia</strong>, evaluating the 4,800th attempt in a vacuum and passing it forward because the immediate step looked mechanically sound.</p>
+    </section>
+
+    <div class="pull-quote reveal" id="pq1">
+      <p>"We sell decomposition as a way to make agents smarter. That is the wrong argument. The real moat is legibility."</p>
+      <div class="pq-actions">
+        <button onclick="shareX('pq1')">Share on X</button>
+        <button onclick="shareLinkedIn('pq1')">LinkedIn</button>
+        <button onclick="copyPermalink('pq1')">Copy Link</button>
+      </div>
+    </div>
+
+    <section class="reveal">
+      <h2>The Legibility Tax</h2>
+      <p>When production teams document Agentic RAG failure modes, they frequently encounter "Retrieval Thrash" <a href="https://towardsdatascience.com/agentic-rag-failure-modes-retrieval-thrash-tool-storms-and-context-bloat-and-how-to-spot-them-early/" target="_blank" rel="noopener">[38]</a>. An agent repeatedly reformulates queries without converging, burning through budgets while the internal verifier simply flags the answer as "incomplete" <a href="https://towardsdatascience.com/agentic-rag-failure-modes-retrieval-thrash-tool-storms-and-context-bloat-and-how-to-spot-them-early/" target="_blank" rel="noopener">[38]</a>. LangGraph's own official tutorial required a hard <code>rewrite_count</code> cap to stop infinite loops <a href="https://towardsdatascience.com/agentic-rag-failure-modes-retrieval-thrash-tool-storms-and-context-bloat-and-how-to-spot-them-early/" target="_blank" rel="noopener">[38]</a>.</p>
+      
+      <p>The counterargument is that a sufficiently large context window and a better system prompt can teach a monolith to track its own budget. But research into context bloat proves that as tool outputs accumulate, the model's attention to its own core instructions degrades, sometimes falling below closed-book performance <a href="https://towardsdatascience.com/agentic-rag-failure-modes-retrieval-thrash-tool-storms-and-context-bloat-and-how-to-spot-them-early/" target="_blank" rel="noopener">[38]</a>. You cannot prompt your way out of an architectural deficit.</p>
+    </section>
+
+    <section class="reveal" id="beat1">
+      <div class="spectrum-widget">
+        <h3>BEFORE</h3>
+        <p>You decompose agents to make them "smarter."</p>
+        <h3>TURN</h3>
+        <p>The $4,200 weekend proves monoliths aren't dumber; they are just opaque.</p>
+        <h3>AFTER</h3>
+        <p>Decomposition is a legibility tax that makes infinite loops mechanically impossible.</p>
+      </div>
+    </section>
+
+    <section class="reveal" id="beat2">
+      <div class="spectrum-widget">
+        <h3>BEFORE</h3>
+        <p>You trust the Verify stage to catch bad tool outputs.</p>
+        <h3>TURN</h3>
+        <p>The Verify stage has amnesia; it passes a 429 error on iteration #4,800 because it only looks at the current step.</p>
+        <h3>AFTER</h3>
+        <p>You must externalize the ledger into an orchestration layer that tracks cumulative state across the loop.</p>
+      </div>
+    </section>
+
+    <figure class="chart-container reveal">
+      <figcaption>Figure 1: Cost accumulation over 63 hours — The Monolith (unbounded) vs The Decomposed Ledger (hard-stopped).</figcaption>
+      <div class="bar-group" id="chart">
+        <div class="bar danger" style="height: 0%;" id="bar1">
+          <div class="bar-value">$4,200</div>
+          <div class="bar-label">Monolith Loop</div>
+        </div>
+        <div class="bar" style="height: 0%;" id="bar2">
+          <div class="bar-value">$50</div>
+          <div class="bar-label">Decomposed Ledger</div>
+        </div>
+      </div>
+    </figure>
+
+    <h2 class="reveal">Triage Checklist</h2>
+    <ul class="checklist reveal" id="checklist">
+      <li data-id="1"><span class="stage-tag tag-plan">Plan</span> Define a hard recursion depth and wall-clock timebox before the loop starts.</li>
+      <li data-id="2"><span class="stage-tag tag-tool">Tool</span> Audit every external boundary to ensure idempotency, making safe retries possible.</li>
+      <li data-id="3"><span class="stage-tag tag-verify">Verify</span> Externalize the ledger. Build a supervisor layer outside the worker's context that tracks cumulative cost and iteration count.</li>
+      <li data-id="4"><span class="stage-tag tag-output">Output</span> Force a "best-effort with uncertainty" fallback when any budget tripwire fires, rather than allowing a silent refusal.</li>
+    </ul>
+
+    <div class="pull-quote reveal" id="pq2">
+      <p>"Stop falling for Verify Amnesia. The tool call didn't break your budget. The verifier's lack of a cumulative ledger did."</p>
+      <div class="pq-actions">
+        <button onclick="shareX('pq2')">Share on X</button>
+        <button onclick="shareLinkedIn('pq2')">LinkedIn</button>
+        <button onclick="copyPermalink('pq2')">Copy Link</button>
+      </div>
+    </div>
+
+    <section class="reveal">
+      <h2>Curing the Loop</h2>
+      <p>In the next 24 hours, pick your most expensive production agent and wrap its main execution loop in a stateful decorator that hard-kills the process if cumulative USD spend exceeds $50 or recursion depth exceeds 8.</p>
+    </section>
+
+  </main>
+
+  <aside>
+    <h3>Related Traces</h3>
+    <ul>
+      <li><a href="https://iggym.github.io/agentic-engineering/#tag=orchestration">Orchestration Patterns</a></li>
+      <li><a href="https://iggym.github.io/agentic-engineering/#tag=verify-gap">The Verify Gap</a></li>
+    </ul>
+    <h3 style="margin-top: 2rem;">Three Things Tracker</h3>
+    <div id="tracker" style="height: 8px; background: var(--surface-2); border-radius: 4px; overflow: hidden;">
+      <div id="tracker-fill" style="height: 100%; width: 0%; background: var(--success); transition: width 0.5s;"></div>
+    </div>
+  </aside>
+</div>
+
+<footer>
+  <p>Citations: <a href="https://medium.com/@sattyamjain96/the-agent-that-burned-4-200-in-63-hours-a-production-ai-postmortem-d38fd9586a85" target="_blank" rel="noopener">[3] Medium Postmortem</a> | <a href="https://towardsdatascience.com/agentic-rag-failure-modes-retrieval-thrash-tool-storms-and-context-bloat-and-how-to-spot-them-early/" target="_blank" rel="noopener">[38] TDS Agentic RAG</a></p>
+  <div class="scroll-top" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">↑ Back to top</div>
+  <p style="margin-top: 1rem;"><a href="https://iggym.github.io/agentic-engineering/">Agentic Engineering Home</a></p>
+</footer>
+
+<script>
+  // Progress bar
+  window.addEventListener('scroll', () => {
+    const h = document.documentElement;
+    const pct = (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100;
+    document.getElementById('progress').style.width = pct + '%';
+  });
+
+  // Widget Trace Logic
+  const stages = document.querySelectorAll('.stage-node');
+  const traceText = document.getElementById('trace-text');
+  const scrubber = document.getElementById('scrubber');
+  const ledger = document.getElementById('ledger-drop');
+
+  const content = {
+    plan: "1. <strong>PLANNING:</strong> The agent set the goal to sync data.",
+    tool: "2. <strong>TOOL CALL:</strong> It fired the <code>crm.upsert</code> payload.",
+    retrieve: "3. <strong>RETRIEVAL:</strong> The CRM API rejected the call, returning a 429 rate limit status.",
+    exec: "4. <strong>EXECUTE:</strong> The agent ingested the 429 error into its context window.",
+    verify: "5. <strong>VERIFY:</strong> The agent evaluated the error in a vacuum. It lacked a cumulative ledger of previous attempts.",
+    output: "6. <strong>OUTPUT:</strong> It output a plan to try the exact same tool call again."
+  };
+
+  function setStage(idx) {
+    stages.forEach((n, i) => {
+      n.classList.toggle('active', i === idx);
+      n.classList.toggle('verify-glitch', i === 4 && idx >= 4);
+    });
+    traceText.innerHTML = content[stages[idx].dataset.stage];
+    ledger.classList.toggle('visible', idx >= 4);
+    scrubber.value = idx;
+    window.location.hash = `stage=${stages[idx].dataset.stage}`;
+  }
+
+  stages.forEach((n, i) => n.addEventListener('click', () => setStage(i)));
+  scrubber.addEventListener('input', (e) => setStage(parseInt(e.target.value)));
+
+  // Hash routing
+  const hashStage = window.location.hash.split('=')[1];
+  if (hashStage) {
+    const idx = Array.from(stages).findIndex(n => n.dataset.stage === hashStage);
+    if (idx >= 0) setStage(idx);
+  }
+
+  // Reveals & Chart Animation
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('revealed');
+        if (e.target.id === 'chart') {
+          document.getElementById('bar1').style.height = '100%';
+          document.getElementById('bar2').style.height = '1.2%';
+        }
+        if (e.target.id === 'beat1' || e.target.id === 'beat2' || e.target.classList.contains('pull-quote')) {
+          updateTracker();
+        }
+      }
+    });
+  }, { threshold: 0.3 });
+
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  // Tracker
+  let trackerCount = 0;
+  function updateTracker() {
+    if (trackerCount < 3) {
+      trackerCount++;
+      document.getElementById('tracker-fill').style.width = (trackerCount * 33.33) + '%';
+    }
+  }
+
+  // Checklist State
+  const checklist = document.getElementById('checklist');
+  const saved = JSON.parse(localStorage.getItem('checklist') || '[]');
+  checklist.querySelectorAll('li').forEach(li => {
+    if (saved.includes(li.dataset.id)) li.classList.add('checked');
+    li.addEventListener('click', () => {
+      li.classList.toggle('checked');
+      const state = Array.from(checklist.querySelectorAll('li')).filter(l => l.classList.contains('checked')).map(l => l.dataset.id);
+      localStorage.setItem('checklist', JSON.stringify(state));
+    });
+  });
+
+  // Share Actions
+  const quotes = {
+    pq1: "We sell decomposition as a way to make agents smarter. That is the wrong argument. The real moat is legibility.",
+    pq2: "Stop falling for Verify Amnesia. The tool call didn't break your budget. The verifier's lack of a cumulative ledger did."
+  };
+  const url = encodeURIComponent(window.location.href);
+
+  function shareX(id) {
+    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(quotes[id])}&url=${url}`, '_blank');
+  }
+  function shareLinkedIn(id) {
+    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`, '_blank');
+  }
+  function copyPermalink(id) {
+    navigator.clipboard.writeText(`${window.location.origin}${window.location.pathname}?quote=${id}`);
+    alert('Permalink copied!');
+  }
+</script>
+</body>
+</html>
