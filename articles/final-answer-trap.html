@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Final Answer Trap</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --surface: #141414;
+            --text: #e0e0e0;
+            --muted: #888;
+            --accent: #ff4d4d;
+            --accent-2: #4dff88;
+            --border: #333;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        #progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 4px;
+            width: 0%;
+            background: var(--accent);
+            z-index: 1000;
+            transition: width 0.1s;
+        }
+
+        #topbar {
+            position: sticky;
+            top: 0;
+            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 999;
+        }
+
+        .breadcrumb { font-size: 0.9rem; color: var(--muted); }
+        .breadcrumb a { color: var(--text); text-decoration: none; }
+        .breadcrumb a:hover { text-decoration: underline; }
+
+        .meta-info { display: flex; gap: 1.5rem; align-items: center; font-size: 0.9rem; }
+        .meta-info span { color: var(--muted); }
+
+        #hamburger { display: none; background: none; border: none; color: var(--text); font-size: 1.5rem; cursor: pointer; }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 3rem;
+        }
+
+        .drawer { display: none; } /* Hidden on desktop */
+
+        main { min-width: 0; }
+
+        h1 {
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            letter-spacing: -0.02em;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin: 2.5rem 0 1rem 0;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.5rem;
+        }
+
+        p { margin-bottom: 1.2rem; }
+
+        .pull-quote {
+            border-left: 4px solid var(--accent);
+            padding: 1rem 1.5rem;
+            margin: 2rem 0;
+            font-size: 1.2rem;
+            font-style: italic;
+            background: var(--surface);
+            position: relative;
+        }
+
+        .share-icons {
+            margin-top: 1rem;
+            display: flex;
+            gap: 1rem;
+        }
+
+        .share-icons a {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            border: 1px solid var(--border);
+            padding: 0.3rem 0.6rem;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .share-icons a:hover { color: var(--text); border-color: var(--text); }
+
+        .spectrum-widget {
+            display: flex;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 2rem 0;
+        }
+        .spectrum-part {
+            flex: 1;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .spectrum-part.left { background: var(--surface); }
+        .spectrum-part.right { background: var(--bg); border-left: 1px solid var(--border); }
+        .spectrum-part:hover { opacity: 0.8; }
+        .spectrum-part.active { background: var(--accent); color: white; }
+        .spectrum-content { margin-top: 1rem; display: none; }
+        .spectrum-content.active { display: block; }
+
+        .trace-widget {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            background: var(--surface);
+        }
+
+        .trace-steps {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+        .trace-steps::before {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--border);
+            z-index: 0;
+        }
+        .trace-step {
+            position: relative;
+            z-index: 1;
+            background: var(--surface);
+            padding: 0 10px;
+            cursor: pointer;
+            text-align: center;
+            color: var(--muted);
+            transition: color 0.2s;
+        }
+        .trace-step .dot {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--bg);
+            border: 2px solid var(--border);
+            margin: 0 auto 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .trace-step.active .dot { border-color: var(--accent-2); background: var(--accent-2); color: var(--bg); }
+        .trace-step.active { color: var(--text); }
+        .trace-step.mismatch .dot { border-color: var(--accent); background: var(--accent); color: var(--bg); animation: pulse 1s infinite; }
+        
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+        .trace-detail {
+            background: var(--bg);
+            padding: 1rem;
+            border-radius: 4px;
+            min-height: 80px;
+            border: 1px solid var(--border);
+        }
+        .trace-mismatch-reveal {
+            display: none;
+            margin-top: 1rem;
+            color: var(--accent);
+            font-weight: bold;
+        }
+
+        .chart-container { margin: 2rem 0; }
+        .bar-group { margin-bottom: 1rem; }
+        .bar-label { font-size: 0.9rem; color: var(--muted); margin-bottom: 0.5rem; }
+        .bar-bg { width: 100%; height: 24px; background: var(--surface); border-radius: 4px; overflow: hidden; }
+        .bar-fill { height: 100%; width: 0; background: var(--accent-2); transition: width 1.5s ease-out; }
+        .bar-fill.fail { background: var(--accent); }
+
+        table { width: 100%; border-collapse: collapse; margin: 2rem 0; font-size: 0.9rem; }
+        th, td { padding: 0.8rem; border: 1px solid var(--border); text-align: left; }
+        th { background: var(--surface); cursor: pointer; }
+        th:hover { background: #222; }
+
+        .reveal { opacity: 0; transform: translateY(20px); transition: all 0.8s ease-out; }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+
+        .three-things-tracker {
+            position: sticky;
+            top: 80px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 1.5rem;
+            border-radius: 8px;
+        }
+        .tracker-item { margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); opacity: 0.5; transition: opacity 0.3s; }
+        .tracker-item.unlocked { opacity: 1; }
+        .tracker-check { font-size: 1.2rem; margin-right: 0.5rem; }
+
+        .checklist-item { display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 1.5rem; }
+        .checklist-item input { margin-top: 5px; transform: scale(1.2); accent-color: var(--accent-2); }
+        .checklist-item label { cursor: pointer; }
+        .checklist-item.checked label { text-decoration: line-through; color: var(--muted); }
+
+        .recall-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 1rem;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .recall-answer { display: none; margin-top: 1rem; color: var(--accent-2); }
+
+        figcaption { font-size: 0.85rem; color: var(--muted); font-style: italic; margin-top: 0.5rem; text-align: center; }
+
+        footer { border-top: 1px solid var(--border); padding: 2rem; text-align: center; margin-top: 4rem; }
+        footer a { color: var(--text); display: inline-block; margin: 0 1rem; }
+
+        @media (max-width: 880px) {
+            #hamburger { display: block; }
+            .meta-info { display: none; }
+            .container { grid-template-columns: 1fr; }
+            .three-things-tracker { position: static; margin-bottom: 2rem; }
+            .drawer.open { display: block; position: fixed; top: 60px; left: 0; width: 100%; height: calc(100% - 60px); background: var(--bg); padding: 2rem; z-index: 998; overflow-y: auto;}
+            .drawer .three-things-tracker { position: static; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * { transition: none !important; animation: none !important; }
+            .reveal { opacity: 1; transform: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="progress-bar"></div>
+    <nav id="topbar">
+        <div class="breadcrumb">
+            <a href="https://iggym.github.io/agentic-engineering/">Home</a> / <span>Evaluation-for-agents</span>
+        </div>
+        <div class="meta-info">
+            <span>5 min read</span>
+            <span>April 25, 2024</span>
+        </div>
+        <button id="hamburger">☰</button>
+    </nav>
+
+    <div class="container">
+        <aside class="drawer" id="drawer">
+            <div class="three-things-tracker" id="tracker">
+                <h3>Insight Tracker</h3>
+                <div class="tracker-item" data-target="insight-1">
+                    <span class="tracker-check">○</span> Passing patch masks failure
+                </div>
+                <div class="tracker-item" data-target="insight-2">
+                    <span class="tracker-check">○</span> ACI design is critical
+                </div>
+                <div class="tracker-item" data-target="insight-3">
+                    <span class="tracker-check">○</span> Illusion of competence
+                </div>
+            </div>
+        </aside>
+
+        <main>
+            <h1>The Final Answer Trap</h1>
+            
+            <p>On March 12, Cognition Labs introduced Devin. The demo showed the AI software engineer fixing an Upwork bug. Viewers watched the final patch. It compiled. The internet called it a breakthrough. Days later, engineers dissecting the screen recording found a different story. The agent had searched the repository, missed the correct C++ file, and retrieved an unrelated Python script. It then spent five minutes editing the wrong file before stumbling onto a partial fix. The final output passed. The execution trajectory was a disaster.</p>
+
+            <p>If you evaluate only the terminal output, you are measuring an accident, not a system. A passing final answer is the worst possible signal of agent capability.</p>
+
+            <div class="spectrum-widget">
+                <div class="spectrum-part left active" onclick="toggleSpectrum('left')">Final-Answer Eval</div>
+                <div class="spectrum-part right" onclick="toggleSpectrum('right')">Trajectory Eval</div>
+            </div>
+            <div class="spectrum-content left active" id="content-left">
+                <p>Measures the final patch. Score: 100%. Conclusion: The agent is capable. Risk: High.</p>
+            </div>
+            <div class="spectrum-content right" id="content-right">
+                <p>Measures the execution path. Score: 20%. Conclusion: The agent hallucinated retrieval. Risk: Mitigated.</p>
+            </div>
+
+            <div class="pull-quote">
+                A passing final answer is the worst possible signal of agent capability.
+                <div class="share-icons">
+                    <a href="https://twitter.com/intent/tweet?text=A%20passing%20final%20answer%20is%20the%20worst%20possible%20signal%20of%20agent%20capability.%20https://iggym.github.io/agentic-engineering/" target="_blank">↗ Share on X</a>
+                    <a href="https://www.linkedin.com/sharing/share-offsite/?url=https://iggym.github.io/agentic-engineering/&summary=A%20passing%20final%20answer%20is%20the%20worst%20possible%20signal%20of%20agent%20capability." target="_blank">↗ Share on LinkedIn</a>
+                </div>
+            </div>
+
+            <div class="reveal" id="beat-1">
+                <p>[BEAT 1] The final output is a mirage; the execution trace is the water table. When you score a final patch, you cannot distinguish between an agent that executed a flawless retrieval path and one that hallucinated its way into a syntactically correct file. You reward the collision of errors that happened to produce a green test.</p>
+            </div>
+
+            <p id="insight-1">The Princeton SWE-agent team recognized this dynamic later in March. They didn't just tune prompts; they built an Agent Computer Interface (ACI). Their research showed that standard evals missed trajectory failures. An agent would hallucinate a file path, write to it, and fail later.</p>
+
+            <p id="insight-2">By instrumenting the retrieval and execution layers, they caught the hallucination before it contaminated the output. The ACI design forced the agent to verify its retrieval steps. Your brain's prediction-error circuitry flags unexpected outcomes for conscious review, which is why a failed tool call grabs your attention faster than a successful one. Agents need this same feedback loop embedded in their execution loop to self-correct.</p>
+
+            <p id="insight-3">Standard LLM evals check the final answer. Agent evals must check the trajectory. Final-answer evals create an illusion of competence. You ship an agent that passes every test in your staging environment. It fails in production multi-step use because the environment shifts, the accidental side-effects stop aligning, and the agent has never learned to correct a bad retrieval step.</p>
+
+            <blockquote>If the task is done, who cares? Accidental successes do not generalize; they break catastrophically when the environment shifts.</blockquote>
+
+            <h2>Interactive Execution Trace</h2>
+            <figcaption>A wolf in sheep's clothing: the Devin Upwork trace</figcaption>
+            <div class="trace-widget">
+                <div class="trace-steps">
+                    <div class="trace-step active" onclick="showTrace(0)"><div class="dot">1</div>Planner</div>
+                    <div class="trace-step" onclick="showTrace(1)"><div class="dot">2</div>Tool Call</div>
+                    <div class="trace-step" onclick="showTrace(2)"><div class="dot">3</div>Retrieval</div>
+                    <div class="trace-step" onclick="showTrace(3)"><div class="dot">4</div>Execute</div>
+                    <div class="trace-step" onclick="showTrace(4)"><div class="dot">5</div>Output</div>
+                </div>
+                <div class="trace-detail" id="trace-detail">Agent formulates plan to fix camera bug in repository.</div>
+                <div class="trace-mismatch-reveal" id="trace-mismatch">Mismatch found: Agent retrieved file_X.py instead of camera.cpp. Click revealed the root cause.</div>
+            </div>
+
+            <div class="reveal" id="beat-2">
+                <p>[BEAT 2] You aren't training an agent to be right; you are training it to fail safely. A trajectory-level eval exposes the exact layer where the agent lost the plot. Did it plan correctly but fail at tool formatting? Did it format the tool call but retrieve the wrong file? Did it retrieve the right file but edit the wrong line? Without this granularity, your debugging is blind. You will spend hours fixing a tool-call syntax when the upstream retrieval failure was the actual culprit.</p>
+            </div>
+
+            <div class="pull-quote">
+                You aren't training an agent to be right; you are training it to fail safely.
+                <div class="share-icons">
+                    <a href="https://twitter.com/intent/tweet?text=You%20aren%27t%20training%20an%20agent%20to%20be%20right%3B%20you%20are%20training%20it%20to%20fail%20safely.%20https://iggym.github.io/agentic-engineering/" target="_blank">↗ Share on X</a>
+                    <a href="https://www.linkedin.com/sharing/share-offsite/?url=https://iggym.github.io/agentic-engineering/&summary=You%20aren%27t%20training%20an%20agent%20to%20be%20right%3B%20you%20are%20training%20it%20to%20fail%20safely." target="_blank">↗ Share on LinkedIn</a>
+                </div>
+            </div>
+
+            <h2>Data Storytelling</h2>
+            <figcaption>The devil in the details: success rate by evaluation type</figcaption>
+            <div class="chart-container" id="chart-container">
+                <div class="bar-group">
+                    <div class="bar-label">Final-Answer Eval (Illusion of Success)</div>
+                    <div class="bar-bg"><div class="bar-fill" data-width="85%"></div></div>
+                </div>
+                <div class="bar-group">
+                    <div class="bar-label">Trajectory Eval (Actual Root Cause Success)</div>
+                    <div class="bar-bg"><div class="bar-fill fail" data-width="25%"></div></div>
+                </div>
+            </div>
+
+            <table id="comparison-table">
+                <thead>
+                    <tr>
+                        <th onclick="sortTable(0)">Incident</th>
+                        <th onclick="sortTable(1)">Apparent Cause</th>
+                        <th onclick="sortTable(2)">Root Cause Layer</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Devin Upwork</td>
+                        <td>Compiling Output</td>
+                        <td>Retrieval</td>
+                    </tr>
+                    <tr>
+                        <td>SWE-agent Baseline</td>
+                        <td>Wrong Patch</td>
+                        <td>Planning</td>
+                    </tr>
+                    <tr>
+                        <td>Standard LLM Eval</td>
+                        <td>Wrong Answer</td>
+                        <td>Execution</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h2>Your Triage Checklist</h2>
+            <div id="checklist">
+                <div class="checklist-item">
+                    <input type="checkbox" id="step1">
+                    <label for="step1">Log the retrieval payload. Save the actual data returned to the agent to spot hallucinations.</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="step2">
+                    <label for="step2">Score the trajectory, not the patch. Implement a checkpoint eval for intermediate steps.</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="step3">
+                    <label for="step3">Inject retrieval failures. Manually break a tool response in staging to test self-correction.</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="step4">
+                    <label for="step4">Trace the execution path. Map every run through planner, tool, retrieval, execute, output.</label>
+                </div>
+            </div>
+
+            <h2>Recall Practice</h2>
+            <figcaption>Locking it in: test your mental model</figcaption>
+            <div class="recall-card" onclick="this.querySelector('.recall-answer').style.display = 'block'">
+                <strong>What is the worst signal of agent capability?</strong>
+                <div class="recall-answer">A passing final answer. It measures an accident, not a system.</div>
+            </div>
+            <div class="recall-card" onclick="this.querySelector('.recall-answer').style.display = 'block'">
+                <strong>What does ACI stand for in the context of SWE-agent?</strong>
+                <div class="recall-answer">Agent Computer Interface. The tools and feedback format the agent uses to navigate.</div>
+            </div>
+
+            <h2>Your Next 24 Hours</h2>
+            <p>Add a log statement to your agent's tool-call payload today. Inspect the exact JSON returned from your retrieval tool on the last five production runs. Find the mismatch between what the tool returned and what the agent claimed it received. Fix that gap.</p>
+        </main>
+    </div>
+
+    <footer>
+        <a href="https://iggym.github.io/agentic-engineering/">Home</a>
+        <a href="#" onclick="window.scrollTo({top: 0, behavior: 'smooth'}); return false;">Back to Top</a>
+        <p style="margin-top: 1rem; color: var(--muted); font-size: 0.8rem;">Sources: Cognition Devin Demo (March 2024), SWE-agent Paper (March 2024)</p>
+    </footer>
+
+    <script>
+        // Progress Bar
+        window.onscroll = function() {
+            let winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+            let height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            let scrolled = (winScroll / height) * 100;
+            document.getElementById("progress-bar").style.width = scrolled + "%";
+        };
+
+        // Spectrum Widget
+        function toggleSpectrum(side) {
+            document.querySelectorAll('.spectrum-part').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.spectrum-content').forEach(el => el.classList.remove('active'));
+            document.querySelector(`.spectrum-part.${side}`).classList.add('active');
+            document.getElementById(`content-${side}`).classList.add('active');
+        }
+
+        // Trace Widget
+        const traceData = [
+            "Agent formulates plan to fix camera bug in repository.",
+            "Agent calls `grep` for 'camera_feed'.",
+            "Agent retrieves `file_X.py` (Python script). <strong>Click here to reveal mismatch.</strong>",
+            "Agent edits `file_X.py` for 5 minutes.",
+            "Agent reports success. Final eval: PASS."
+        ];
+        function showTrace(index) {
+            document.querySelectorAll('.trace-step').forEach((el, i) => {
+                el.classList.remove('active', 'mismatch');
+                if (i === index) el.classList.add('active');
+            });
+            document.getElementById('trace-detail').innerHTML = traceData[index];
+            document.getElementById('trace-mismatch').style.display = 'none';
+            
+            if (index === 2) {
+                document.querySelector('.trace-step:nth-child(3)').classList.add('mismatch');
+                setTimeout(() => {
+                    document.getElementById('trace-mismatch').style.display = 'block';
+                }, 500);
+            }
+        }
+
+        // Intersection Observer for Reveals & Tracker
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    
+                    // Tracker logic
+                    if (entry.target.id === 'insight-1') unlockTracker(0);
+                    if (entry.target.id === 'insight-2') unlockTracker(1);
+                    if (entry.target.id === 'insight-3') unlockTracker(2);
+                    
+                    // Chart animation
+                    if (entry.target.id === 'chart-container' || entry.target.contains(document.getElementById('chart-container'))) {
+                        document.querySelectorAll('.bar-fill').forEach(bar => {
+                            bar.style.width = bar.getAttribute('data-width');
+                        });
+                    }
+                }
+            });
+        }, { threshold: 0.3 });
+
+        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+        document.querySelectorAll('[id^="insight-"]').forEach(el => observer.observe(el));
+        observer.observe(document.getElementById('chart-container'));
+
+        function unlockTracker(index) {
+            const items = document.querySelectorAll('.tracker-item');
+            items[index].classList.add('unlocked');
+            items[index].querySelector('.tracker-check').textContent = '✓';
+        }
+
+        // Checklist Persistence
+        document.querySelectorAll('.checklist-item input').forEach(input => {
+            const id = input.id;
+            if (localStorage.getItem(id) === 'true') {
+                input.checked = true;
+                input.parentElement.classList.add('checked');
+            }
+            input.addEventListener('change', () => {
+                localStorage.setItem(id, input.checked);
+                input.parentElement.classList.toggle('checked', input.checked);
+            });
+        });
+
+        // Table Sort
+        function sortTable(colIndex) {
+            const table = document.getElementById("comparison-table");
+            let switching = true;
+            while (switching) {
+                switching = false;
+                const rows = table.rows;
+                for (let i = 1; i < (rows.length - 1); i++) {
+                    let shouldSwitch = false;
+                    const x = rows[i].getElementsByTagName("TD")[colIndex];
+                    const y = rows[i + 1].getElementsByTagName("TD")[colIndex];
+                    if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+                        shouldSwitch = true;
+                        break;
+                    }
+                }
+                if (shouldSwitch) {
+                    rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                    switching = true;
+                }
+            }
+        }
+
+        // Hamburger
+        document.getElementById('hamburger').addEventListener('click', () => {
+            document.getElementById('drawer').classList.toggle('open');
+        });
+    </script>
+</body>
+</html>
