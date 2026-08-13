@@ -86,6 +86,81 @@
   "reading_time_minutes": 8,
   "pinned": false,
   "research_window": "Jan 29, 2026 through Mar 12, 2026"
-}
+},{
+  "id": "0047",
+  "slug": "verify-gap",
+  "title": "the verify gap",
+  "hook": "The check that should catch the failure usually runs – but it looks at the wrong layer.",
+  "path": "articles/verify-gap.html",
+  "date": "2026-02-13",
+  "status": "published",
+  "format": "diagnostic",
+  "tags": ["verify-gap", "retrieval", "eval", "trajectory"],
+  "reading_time_minutes": 5,
+  "pinned": false,
+  "research_window": "2025-12-15 – 2026-02-13",
+  "coined_term": "verify gap",
+  "trace_stages": ["planning", "tool_call", "retrieval", "execute", "verify", "output"]
+},{
+  "id": "0147",
+  "slug": "phantom-inheritance-subagents-remember",
+  "title": "Phantom Inheritance: When Your Subagents Remember What You Told Them To Forget",
+  "hook": "Isolation isn't about what you don't pass in the prompt — it's about what your runtime smuggles back in the tool results.",
+  "path": "articles/phantom-inheritance-subagents-remember.html",
+  "date": "2026-03-14",
+  "status": "published",
+  "format": "diagnostic",
+  "tags": ["context-isolation", "verify-gap", "tool-result-channel", "mcp-leak"],
+  "reading_time_minutes": 6,
+  "pinned": false,
+  "research_window": "2026-02-14 to 2026-03-14",
+  "coined_term": "phantom inheritance",
+  "trace_stages": ["planning","tool_call","retrieval","execute","verify","output"]
+},{
+  "id": "0048",
+  "slug": "context-bleed",
+  "title": "context bleed",
+  "hook": "Your context isn't isolated — it's a shared wound that infects every subagent.",
+  "path": "articles/context-bleed.html",
+  "date": "2026-02-13",
+  "status": "published",
+  "format": "diagnostic",
+  "tags": ["context-bleed", "isolation", "memory", "retrieval"],
+  "reading_time_minutes": 5,
+  "pinned": false,
+  "research_window": "2025-12-15 – 2026-02-13",
+  "coined_term": "context bleed",
+  "trace_stages": ["planning", "tool_call", "retrieval", "execute", "verify", "output"]
+},{
+  "id": "0515",
+  "slug": "diagnosing-verify-amnesia",
+  "title": "Diagnosing Verify Amnesia",
+  "hook": "The failure didn't originate at the tool call; it originated at the Verify stage, which evaluated the 4,800th attempt in a vacuum.",
+  "path": "articles/diagnosing-verify-amnesia.html",
+  "date": "2026-05-15",
+  "status": "published",
+  "format": "diagnostic",
+  "tags": ["orchestration", "verify-gap", "tool-use", "cost-economics"],
+  "reading_time_minutes": 10,
+  "pinned": false,
+  "research_window": "2026-03-20 to 2026-05-15",
+  "coined_term": "Verify Amnesia",
+  "trace_stages": ["planning","tool_call","retrieval","execute","verify","output"]
+},  {
+    "id": "0049",
+    "slug": "moat-trap",
+    "title": "moat trap",
+    "hook": "The model is a commodity — your harness is the only durable asset.",
+    "path": "articles/moat-trap.html",
+    "date": "2026-02-13",
+    "status": "published",
+    "format": "diagnostic",
+    "tags": ["moat-trap", "harness", "commoditization", "planning"],
+    "reading_time_minutes": 5,
+    "pinned": false,
+    "research_window": "2025-12-15 – 2026-02-13",
+    "coined_term": "moat trap",
+    "trace_stages": ["planning","tool_call","retrieval","execute","verify","output"]
+  }
   ]
 }
