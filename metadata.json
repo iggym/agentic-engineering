@@ -187,6 +187,36 @@
   "research_window": "2025-12-30 to 2026-02-10",
   "coined_term": "green-light lie",
   "trace_stages": ["planning","tool_call","retrieval","execute","verify","output"]
+}, {
+  "id": "0416",
+  "slug": "the-harness-mirage",
+  "title": "The Harness Mirage: Why Your Agent Infrastructure Is Lying to You",
+  "hook": "Most agent failures aren't model reasoning errors—they're the harness mirage: unconstrained execution loops passing dirty state through shallow verification gates.",
+  "path": "articles/the-harness-mirage.html",
+  "date": "2026-04-16",
+  "status": "published",
+  "format": "diagnostic",
+  "tags": ["harness-design", "verify-gap", "agent-architecture", "orchestration"],
+  "reading_time_minutes": 6,
+  "pinned": false,
+  "research_window": "2026-03-12 to 2026-04-16",
+  "coined_term": "the harness mirage",
+  "trace_stages": ["planning", "tool_call", "retrieval", "execute", "verify", "output"]
+}, {
+  "id": "0219",
+  "slug": "the-side-effect-slipstream",
+  "title": "The Side-Effect Slipstream: Where Agent Runtime Risk Actually Lives",
+  "hook": "Stop red-teaming prompts while ignoring unisolated runtimes. Most agent exploits leverage the side-effect slipstream: unmonitored state mutations passing through surface-level tool verification.",
+  "path": "articles/the-side-effect-slipstream.html",
+  "date": "2026-02-19",
+  "status": "published",
+  "format": "diagnostic",
+  "tags": ["agent-security", "execution-sandboxing", "mcp-security", "verify-gap"],
+  "reading_time_minutes": 5,
+  "pinned": false,
+  "research_window": "2026-01-08 to 2026-02-19",
+  "coined_term": "the side-effect slipstream",
+  "trace_stages": ["planning", "tool_call", "retrieval", "execute", "verify", "output"]
 }
   ]
 }
