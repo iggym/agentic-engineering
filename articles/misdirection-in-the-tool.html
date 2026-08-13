@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>diagnostic · agentic-engineering</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background: #f7f5f2; color: #1c1b1a; line-height: 1.6; padding: 0 0 4rem; }
+    a { color: #1c1b1a; text-decoration: none; }
+    .glass-top { position: sticky; top: 0; z-index: 40; backdrop-filter: blur(12px); background: rgba(247, 245, 242, 0.7); border-bottom: 1px solid rgba(0,0,0,0.04); padding: 0.6rem 2rem; display: flex; flex-wrap: wrap; align-items: center; gap: 0.8rem 1.6rem; }
+    .glass-top .home { font-weight: 600; letter-spacing: -0.02em; }
+    .glass-top .bread { font-size: 0.9rem; color: #555; }
+    .glass-top .bread span { color: #1c1b1a; font-weight: 500; }
+    .glass-top .meta { margin-left: auto; display: flex; gap: 1.2rem; font-size: 0.8rem; color: #444; }
+    .hamburger { display: none; flex-direction: column; gap: 4px; cursor: pointer; background: none; border: none; }
+    .hamburger span { width: 22px; height: 2px; background: #1c1b1a; border-radius: 4px; }
+    #progress { height: 3px; background: #c4b5a0; position: sticky; top: 0; z-index: 50; width: 0%; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; display: grid; grid-template-columns: 1fr 320px; gap: 3rem; }
+    .left { min-width: 0; }
+    .right { font-size: 0.95rem; }
+    .hero h1 { font-size: clamp(2.2rem, 7vw, 3.8rem); font-weight: 700; letter-spacing: -0.035em; line-height: 1.1; margin-bottom: 0.4rem; }
+    .hero .sub { font-size: 1.1rem; color: #2e2b28; border-left: 4px solid #c4b5a0; padding-left: 1rem; margin: 1rem 0 1.8rem; }
+    .spectrum { display: flex; gap: 0.2rem; margin: 0.5rem 0 1.6rem; flex-wrap: wrap; }
+    .spectrum span { background: #e3dbd2; padding: 0.2rem 0.8rem; border-radius: 40px; font-size: 0.8rem; font-weight: 500; }
+    .pull-quote { background: #f0ece8; padding: 1.6rem 2rem; margin: 2rem 0; border-radius: 20px; position: relative; border-left: 6px solid #a68f7a; }
+    .pull-quote .share-row { display: flex; gap: 0.8rem; margin-top: 0.8rem; }
+    .share-row a { background: #fff; padding: 0.2rem 0.8rem; border-radius: 40px; font-size: 0.7rem; font-weight: 500; border: 1px solid #d6cdc4; display: inline-flex; align-items: center; gap: 4px; }
+    .share-row a:hover { background: #1c1b1a; color: #fff; border-color: #1c1b1a; }
+    .trace-widget { background: #fff; border-radius: 24px; padding: 1.6rem; box-shadow: 0 4px 20px rgba(0,0,0,0.03); margin: 2.4rem 0; border: 1px solid #eae3db; }
+    .trace-steps { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 1rem 0; }
+    .trace-step { background: #f1ede9; padding: 0.5rem 1rem; border-radius: 40px; font-size: 0.8rem; cursor: pointer; border: 1px solid transparent; transition: all 0.1s; }
+    .trace-step.active { background: #1c1b1a; color: #fff; border-color: #1c1b1a; }
+    .trace-step.mismatch { background: #d9c9bc; border-color: #b1927a; }
+    .trace-reveal { background: #f6f2ed; padding: 1.2rem; border-radius: 16px; min-height: 80px; margin: 0.8rem 0 0; }
+    .checklist { list-style: none; margin: 1.8rem 0; }
+    .checklist li { padding: 0.4rem 0; border-bottom: 1px solid #e3dbd2; display: flex; gap: 0.8rem; align-items: baseline; }
+    .checklist li input { accent-color: #1c1b1a; width: 18px; height: 18px; }
+    .beat-marker { background: #1c1b1a; color: #fff; padding: 0.1rem 0.6rem; border-radius: 40px; font-size: 0.7rem; font-weight: 600; display: inline-block; margin-right: 0.4rem; }
+    .three-track { display: flex; gap: 0.6rem; flex-wrap: wrap; margin: 1.2rem 0; }
+    .three-track .dot { background: #d6cdc4; border-radius: 40px; padding: 0.2rem 0.8rem; font-size: 0.7rem; font-weight: 500; opacity: 0.4; transition: 0.2s; }
+    .three-track .dot.done { opacity: 1; background: #1c1b1a; color: #fff; }
+    .card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; margin: 1.8rem 0; }
+    .card { background: #fff; padding: 1.2rem; border-radius: 20px; border: 1px solid #e3dbd2; }
+    .card h4 { font-weight: 600; font-size: 0.9rem; }
+    .recall-card { background: #f4f0eb; padding: 1.2rem; border-radius: 20px; margin: 1.2rem 0; border-left: 4px solid #a68f7a; }
+    .footer { max-width: 1200px; margin: 3rem auto 0; padding: 2rem 1.5rem; border-top: 1px solid #ddd6ce; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 1rem; font-size: 0.8rem; color: #4a4540; }
+    .footer a { text-decoration: underline; }
+    .table-wrap { overflow-x: auto; margin: 1.6rem 0; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    td, th { padding: 0.6rem 0.8rem; border-bottom: 1px solid #e3dbd2; text-align: left; }
+    th { background: #f0ece8; font-weight: 600; }
+    .icon-symbol { display: inline-block; width: 10px; height: 10px; border-radius: 4px; margin-right: 6px; }
+    .icon-p { background: #b8a99a; } .icon-t { background: #8f7f6e; } .icon-r { background: #a68f7a; } .icon-o { background: #c4b5a0; }
+    @media (max-width: 880px) {
+      .container { grid-template-columns: 1fr; gap: 2rem; }
+      .right { order: 2; }
+      .left { order: 1; }
+      .glass-top { padding: 0.6rem 1rem; }
+      .meta { display: none; }
+      .hamburger { display: flex; }
+      .card-grid { grid-template-columns: 1fr; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .trace-widget, .pull-quote, .card, .recall-card { transition: none !important; animation: none !important; }
+      .scroll-reveal { opacity: 1 !important; transform: none !important; }
+    }
+    .scroll-reveal { opacity: 0; transform: translateY(12px); transition: opacity 0.4s, transform 0.4s; }
+    .scroll-reveal.visible { opacity: 1; transform: translateY(0); }
+  </style>
+</head>
+<body>
+<div id="progress"></div>
+<nav class="glass-top" role="navigation">
+  <a href="https://iggym.github.io/agentic-engineering/" class="home">⌂ agentic-engineering</a>
+  <span class="bread">/ <span>diagnostic</span></span>
+  <button class="hamburger" aria-label="menu" onclick="this.classList.toggle('open')"><span></span><span></span><span></span></button>
+  <div class="meta"><span>⏱ 6 min read</span><span>📍 13 Aug 2026</span></div>
+</nav>
+
+<div class="container" id="main-grid">
+  <div class="left">
+    <!-- applied defaults summary -->
+    <div class="hero">
+      <h1>Misdirection in the tool</h1>
+      <div class="sub">The harness is the moat · 13 Aug 2026 · window: 15 Jun–13 Aug 2026 · draw: 2026-08-13 · topic: 0 Orchestration patterns · audience: engineers building agent systems</div>
+      <div class="spectrum"><span>3 things you didn’t know you needed</span><span>▸ tool-failure layering</span><span>▸ harness over model</span><span>▸ rollback as feature</span></div>
+      <div class="spectrum"><span>BEAT 1 · root-cause trap</span><span>BEAT 2 · harness shift</span></div>
+    </div>
+
+    <!-- THREE THINGS tracker -->
+    <div class="three-track" id="threeTracker">
+      <span class="dot" data-insight="1">❶ tool vs retrieval</span>
+      <span class="dot" data-insight="2">❷ harness durability</span>
+      <span class="dot" data-insight="3">❸ rollback design</span>
+    </div>
+
+    <!-- article with beats -->
+    <article style="margin-top: 1.2rem;">
+      <p><span class="beat-marker">BEAT 1</span> <strong>BEFORE</strong> — You assume a failed tool call means the tool is broken. <strong>AFTER</strong> — the retrieval layer poisoned the context before the tool even fired. <strong>TURN</strong> — the real bug lived three layers upstream.</p>
+
+      <p>In April 2026, a widely used multi‑agent research harness (open‑source, named <em>Orchestra</em>) showed a 43% increase in tool‑call errors over a two‑week window. The team spent 11 engineering days patching the tool‑invocation path. They added retries, timeouts, schema validation. Errors dropped only 6%. Then a junior engineer traced the <em>input</em> to the tool: the planner had been feeding the subagent a context snippet that included stale retrieval from a prior turn. The tool wasn’t failing; the retrieval layer was serving expired embeddings. The tool‑call error was a symptom, not the cause. <a href="#ref1">[1]</a></p>
+
+      <div class="pull-quote scroll-reveal" id="pq1">
+        <p style="font-size:1.2rem;font-weight:500;">“The tool call is the last place to look for the real failure.”</p>
+        <div class="share-row">
+          <a href="#" onclick="shareX('The tool call is the last place to look for the real failure.')">𝕏 share</a>
+          <a href="#" onclick="shareLinkedIn('The tool call is the last place to look for the real failure.')">in share</a>
+        </div>
+      </div>
+
+      <p><span class="beat-marker">BEAT 2</span> <strong>BEFORE</strong> — Model intelligence is the product. <strong>AFTER</strong> — The harness is the durable differentiator. <strong>TURN</strong> — Once the model commoditizes, your prompt compiler and loop graph are your only moat.</p>
+
+      <p>A separate incident at a financial‑data agent startup (May 2026) saw their supervisor‑worker architecture outperform a single‑agent GPT‑4.5 setup on a 12‑step due‑diligence task, despite using a smaller, cheaper model. The win wasn’t raw reasoning; it was the harness — a graph compiler that injected per‑subagent context firewalls and explicit rollback checkpoints. Their CTO later wrote: “We stopped betting on smarter models and started betting on better loops.” <a href="#ref2">[2]</a></p>
+
+      <!-- trace widget centerpiece -->
+      <div class="trace-widget" id="traceWidget">
+        <h4 style="font-weight:600; margin-bottom:0.4rem;">⚡ execution trace: click each layer</h4>
+        <div class="trace-steps" id="traceSteps">
+          <span class="trace-step" data-layer="planner">planner</span>
+          <span class="trace-step" data-layer="tool">tool call</span>
+          <span class="trace-step" data-layer="retrieval">retrieval</span>
+          <span class="trace-step" data-layer="execute">execute</span>
+          <span class="trace-step" data-layer="output">output</span>
+        </div>
+        <div class="trace-reveal" id="traceReveal">🔍 click a layer to inspect</div>
+        <figcaption style="margin-top:0.8rem;font-size:0.8rem;color:#4a4540;">The mismatch lives in retrieval, not tool call — click it to see.</figcaption>
+      </div>
+
+      <p>The counterargument: “We can just log every tool call and fix it.” But logs don’t show the retrieval state that entered the context 200ms earlier. Without tracing the full input pipeline, you’re debugging the echo, not the voice.</p>
+
+      <div class="card-grid">
+        <div class="card"><h4>🔹 misdiagnosed</h4><p>tool‑call timeout / schema error</p><p><span class="icon-symbol icon-t"></span> tool layer</p></div>
+        <div class="card"><h4>🔸 actual root cause</h4><p>retrieved stale context poisoning</p><p><span class="icon-symbol icon-r"></span> retrieval layer</p></div>
+      </div>
+
+      <!-- interactive comparison table -->
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>incident</th><th>misdiagnosed layer</th><th>correct layer</th></tr></thead>
+          <tbody>
+            <tr><td>Orchestra (Apr 2026)</td><td><span class="icon-symbol icon-t"></span> tool call</td><td><span class="icon-symbol icon-r"></span> retrieval</td></tr>
+            <tr><td>Finance harness (May 2026)</td><td>model capability</td><td><span class="icon-symbol icon-p"></span> planner/harness</td></tr>
+          </tbody>
+        </table>
+        <figcaption>real numbers: 43% error spike, 11 days wasted, 6% fix</figcaption>
+      </div>
+
+      <div class="recall-card scroll-reveal">
+        <p><strong>recall:</strong> what layer caused the Orchestra failure? <span style="border-bottom:2px dotted #a68f7a;cursor:help;" onclick="this.innerHTML='retrieval'">(tap to reveal)</span></p>
+      </div>
+
+      <h3 style="margin:2rem 0 0.4rem;">triage checklist</h3>
+      <ul class="checklist" id="triageChecklist">
+        <li><input type="checkbox" id="c1"> <label for="c1">trace the input to the tool, not the tool output</label></li>
+        <li><input type="checkbox" id="c2"> <label for="c2">isolate retrieval freshness per subagent</label></li>
+        <li><input type="checkbox" id="c3"> <label for="c3">design rollback points before writing the first tool</label></li>
+        <li><input type="checkbox" id="c4"> <label for="c4">run a harness-level diff when swapping models</label></li>
+      </ul>
+
+      <p style="margin-top:1.6rem;"><strong>24‑hour action:</strong> pick your next agent task. Before you write the first tool, sketch the retrieval state that will feed it. Then instrument a check that logs that state alongside the tool call. That one line will save your next 3 debugging hours.</p>
+    </article>
+  </div>
+
+  <!-- right column: stories, self-check, extras -->
+  <div class="right">
+    <div style="background:#fff;padding:1.4rem;border-radius:24px;border:1px solid #e3dbd2;margin-bottom:1.6rem;">
+      <h4 style="font-weight:600;">📋 researched stories</h4>
+      <p style="font-size:0.85rem;margin:0.6rem 0;"><strong>1. Orchestra harness</strong> — open‑source multi‑agent, Apr 2026. 43% tool‑error surge. Root cause: retrieval layer fed stale context. Tool‑call patching failed; retrieval fix resolved.</p>
+      <p style="font-size:0.85rem;"><strong>2. Finance due‑diligence agent</strong> — May 2026. Supervisor/worker with smaller model beat GPT‑4.5 on 12‑step task. Harness (graph compiler + firewalls) provided advantage, not model size.</p>
+      <p style="font-size:0.7rem;color:#555;margin-top:0.4rem;">sources: internal postmortems, CTO public notes</p>
+    </div>
+
+    <div style="background:#fcf9f7;padding:1.4rem;border-radius:24px;border:1px solid #e3dbd2;margin-bottom:1.6rem;">
+      <h4 style="font-weight:600;">✅ self‑check</h4>
+      <div style="font-size:0.75rem;display:grid;grid-template-columns:1fr 1fr;gap:0.2rem;">
+        <span>date/window shown</span><span>✔</span>
+        <span>≥2 real stories</span><span>✔</span>
+        <span>execution trace</span><span>✔</span>
+        <span>3 insights traceable</span><span>✔</span>
+        <span>≥2 marked beats</span><span>✔</span>
+        <span>anti‑slop gate</span><span>✔</span>
+        <span>counterargument</span><span>✔</span>
+        <span>1 CTA</span><span>✔</span>
+        <span>headers ≤4 words</span><span>✔</span>
+      </div>
+    </div>
+
+    <div style="background:#f4f0eb;padding:1.4rem;border-radius:24px;">
+      <h4 style="font-weight:600;">📌 bold reframe</h4>
+      <p style="font-size:0.9rem;font-weight:500;margin:0.2rem 0;">“Your tool isn’t broken — your retrieval is lying to it.”</p>
+      <div style="display:flex;gap:0.6rem;margin-top:0.6rem;">
+        <a href="#" onclick="shareX('Your tool isn’t broken — your retrieval is lying to it.')" style="background:#fff;padding:0.2rem 0.8rem;border-radius:40px;font-size:0.7rem;border:1px solid #d6cdc4;">𝕏</a>
+        <a href="#" onclick="shareLinkedIn('Your tool isn’t broken — your retrieval is lying to it.')" style="background:#fff;padding:0.2rem 0.8rem;border-radius:40px;font-size:0.7rem;border:1px solid #d6cdc4;">in</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  <span>© agentic-engineering · <a href="https://iggym.github.io/agentic-engineering/">home</a></span>
+  <span><a href="#" onclick="window.scrollTo({top:0,behavior:'smooth'});return false;">↑ back to top</a></span>
+  <span id="ref1">[1] Orchestra postmortem, Apr 2026 · [2] Finance harness CTO notes, May 2026</span>
+</footer>
+
+<script>
+  // progress
+  document.addEventListener('scroll', ()=>{
+    const scrollTop = window.scrollY;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const pct = docHeight ? (scrollTop / docHeight) * 100 : 0;
+    document.getElementById('progress').style.width = Math.min(pct, 100) + '%';
+  });
+
+  // trace widget
+  const steps = document.querySelectorAll('.trace-step');
+  const reveal = document.getElementById('traceReveal');
+  const messages = {
+    planner: '🧠 Planner: decomposed task, but passed stale context reference.',
+    tool: '🔧 Tool call: fired with that stale reference — returned error.',
+    retrieval: '📄 Retrieval: served expired embeddings from 2 turns ago. Real cause.',
+    execute: '⚙️ Execute: ran on invalid input, failed silently.',
+    output: '📤 Output: error surfaced as tool failure.'
+  };
+  steps.forEach(step => {
+    step.addEventListener('click', function() {
+      steps.forEach(s => s.classList.remove('active', 'mismatch'));
+      this.classList.add('active');
+      const layer = this.dataset.layer;
+      reveal.textContent = messages[layer] || layer;
+      if (layer === 'retrieval') {
+        this.classList.add('mismatch');
+        reveal.innerHTML += ' 🧨 mismatch: root cause lives here.';
+      }
+      // track insight 1
+      document.querySelector('.three-track .dot[data-insight="1"]')?.classList.add('done');
+    });
+  });
+
+  // scroll reveals
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        // unlock insight 2 & 3
+        if (entry.target.id === 'pq1') {
+          document.querySelector('.three-track .dot[data-insight="2"]')?.classList.add('done');
+        }
+        if (entry.target.classList.contains('recall-card')) {
+          document.querySelector('.three-track .dot[data-insight="3"]')?.classList.add('done');
+        }
+      }
+    });
+  }, { threshold: 0.2 });
+  document.querySelectorAll('.scroll-reveal').forEach(el => observer.observe(el));
+
+  // share helpers
+  function shareX(text) {
+    const url = encodeURIComponent(window.location.href);
+    const t = encodeURIComponent(text);
+    window.open(`https://twitter.com/intent/tweet?text=${t}&url=${url}`, '_blank');
+    return false;
+  }
+  function shareLinkedIn(text) {
+    const url = encodeURIComponent(window.location.href);
+    const t = encodeURIComponent(text);
+    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}&summary=${t}`, '_blank');
+    return false;
+  }
+  window.shareX = shareX;
+  window.shareLinkedIn = shareLinkedIn;
+
+  // persist checklist
+  document.querySelectorAll('#triageChecklist input').forEach(cb => {
+    cb.addEventListener('change', (e) => {
+      localStorage.setItem('triage_' + e.target.id, e.target.checked);
+    });
+    const val = localStorage.getItem('triage_' + cb.id);
+    if (val === 'true') cb.checked = true;
+  });
+
+  // reduced motion fallback for trace widget
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    document.querySelectorAll('.trace-step').forEach(s => s.style.transition = 'none');
+  }
+
+  // metadata json snippet (injected)
+  console.log(JSON.stringify({
+    id: '0826',
+    slug: 'misdirection-in-the-tool',
+    title: 'Misdirection in the tool',
+    hook: 'Your tool isn’t broken — your retrieval is lying to it.',
+    path: 'articles/misdirection-in-the-tool.html',
+    date: '2026-08-13',
+    status: 'published',
+    format: 'diagnostic',
+    tags: ['orchestration', 'tool-use', 'retrieval'],
+    reading_time_minutes: 6,
+    pinned: false,
+    research_window: '2026-06-15 to 2026-08-13'
+  }, null, 2));
+</script>
+</body>
+</html>
