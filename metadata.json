@@ -34,6 +34,58 @@
   "slug": "divide-and-debug",
   "type": "diagnostic",
   "research_window": ["2026-03-26", "2026-04-30"]
+},{
+  "id": "1847",
+  "slug": "when-one-subagents-memory-becomes-everyones-problem",
+  "title": "When One Subagent's Memory Becomes Everyone's Problem",
+  "hook": "Isolation doesn't make agents smarter. It stops one bad memory from becoming a system-wide lie.",
+  "path": "articles/when-one-subagents-memory-becomes-everyones-problem.html",
+  "date": "2026-03-12",
+  "status": "published",
+  "format": "diagnostic",
+  "tags": ["context-isolation", "orchestration", "tool-use-failure", "security"],
+  "reading_time_minutes": 8,
+  "pinned": false,
+  "research_window": "Jan 29, 2026 through Mar 12, 2026"
+}, {
+  "id": "0826",
+  "slug": "misdirection-in-the-tool",
+  "title": "Misdirection in the tool",
+  "hook": "Your tool isn't broken — your retrieval is lying to it.",
+  "path": "articles/misdirection-in-the-tool.html",
+  "date": "2026-08-13",
+  "status": "published",
+  "format": "diagnostic",
+  "tags": ["orchestration", "tool-use", "retrieval"],
+  "reading_time_minutes": 6,
+  "pinned": false,
+  "research_window": "2026-06-15 to 2026-08-13"
+},{
+  "id": "0425",
+  "slug": "final-answer-trap",
+  "title": "The Final Answer Trap",
+  "hook": "A passing final answer is the worst possible signal of agent capability.",
+  "path": "articles/final-answer-trap.html",
+  "date": "April 25, 2024",
+  "status": "published",
+  "format": "diagnostic",
+  "tags": ["evaluation", "trajectory-eval", "agents"],
+  "reading_time_minutes": 5,
+  "pinned": false,
+  "research_window": "March 21, 2024 - April 25, 2024"
+}, {
+  "id": "1847",
+  "slug": "when-one-subagents-memory-becomes-everyones-problem",
+  "title": "When One Subagent's Memory Becomes Everyone's Problem",
+  "hook": "Isolation doesn't make agents smarter. It stops one bad memory from becoming a system-wide lie.",
+  "path": "articles/when-one-subagents-memory-becomes-everyones-problem.html",
+  "date": "2026-03-12",
+  "status": "published",
+  "format": "diagnostic",
+  "tags": ["context-isolation", "orchestration", "tool-use-failure", "security"],
+  "reading_time_minutes": 8,
+  "pinned": false,
+  "research_window": "Jan 29, 2026 through Mar 12, 2026"
 }
   ]
 }
