@@ -217,6 +217,21 @@
   "research_window": "2026-01-08 to 2026-02-19",
   "coined_term": "the side-effect slipstream",
   "trace_stages": ["planning", "tool_call", "retrieval", "execute", "verify", "output"]
-}
+}, {
+    "id": "0050",
+    "slug": "verify-theater",
+    "title": "verify theater",
+    "hook": "Your evals pass, your agents fail — because you're checking answers, not trajectories.",
+    "path": "articles/verify-theater.html",
+    "date": "2026-02-13",
+    "status": "published",
+    "format": "diagnostic",
+    "tags": ["verify-theater", "evaluation", "trajectory", "verify"],
+    "reading_time_minutes": 5,
+    "pinned": false,
+    "research_window": "2025-12-15 – 2026-02-13",
+    "coined_term": "verify theater",
+    "trace_stages": ["planning","tool_call","retrieval","execute","verify","output"]
+  }
   ]
 }
