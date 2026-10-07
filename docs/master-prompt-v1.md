@@ -44,8 +44,11 @@ EXISTING COINED TERMS:   context bleed, verify gap, verify theater, verify amnes
                          moat trap, phantom inheritance, phantom argument,
                          green-light lie, harness mirage, side-effect slipstream,
                          never committed, divide and debug, final answer trap,
-                         catching fire / contagious context
-                         (do NOT reuse these; link to them where relevant)
+                         catching fire / contagious context, retry echo,
+                         description drift, instruction sediment, paper plan,
+                         handoff fiction, six-stage autopsy
+                         (do NOT reuse these; link to them where relevant —
+                         the authoritative list is coined_term in metadata.json)
 OPTIONAL NOTES:          {{sources you already have, angle, things to avoid}}
 
 =====================================================================
@@ -151,9 +154,16 @@ job each one does is fixed:
 =====================================================================
 6. DESIGN SYSTEM (must match the site)
 =====================================================================
-Produce ONE self-contained HTML file: inline CSS and inline vanilla JS, no
-build step, no frameworks, no external JS. Only external resource allowed:
-Google Fonts.
+Produce ONE HTML file that links the shared site assets:
+  <link rel="stylesheet" href="../assets/article.css">
+  <script src="../assets/article.js" defer></script>
+No build step, no frameworks, no other external JS. Only other external
+resource allowed: Google Fonts. Use the shared class names (see
+articles/the-retry-echo.html as the reference implementation): .topbar,
+.article-head, .callout(.def), .bat, .trace (li[data-role="root"|"symptom"],
+buttons data-action="step"|"reveal"), .cards/.card, .table-wrap,
+ul.check, details (recall), .today, ol.sources, .related. Add page-specific
+inline CSS only when the shared styles truly don't cover it.
 
 Fonts:
   --display: 'Space Grotesk' (500/600/700)
@@ -197,7 +207,7 @@ Technical requirements:
 - Page works with JS disabled (content readable; interactivity is
   progressive enhancement).
 - Inline SVG for diagrams; no raster images unless supplied.
-- Keep the file under ~60 KB.
+- Keep the file under ~40 KB.
 
 =====================================================================
 7. OUTPUT FORMAT
@@ -247,12 +257,17 @@ Silently check and fix before returning:
 ## Pre-publish checklist (human)
 
 - [ ] Click every source link — they resolve and say what the article claims.
-- [ ] `python3 -m json.tool metadata.json` passes.
+- [ ] `python3 scripts/validate.py` passes, and `python3 scripts/build.py` has been run.
 - [ ] The new card shows on the homepage and the stage filter finds it.
 - [ ] The page renders on mobile width and with reduced motion on.
 - [ ] The slug is unique, and the coined term doesn't duplicate an existing one.
 
 ## Changelog
+
+- **v1.1**: articles link the shared `assets/article.css` and
+  `assets/article.js` instead of inlining everything. Run
+  `python3 scripts/validate.py` and `python3 scripts/build.py` after adding an
+  article.
 
 - **v1** — first version. Based on the structure of the strongest existing
   reports (*Never Committed*, *Divide and Debug*, *Catching Fire*) and the

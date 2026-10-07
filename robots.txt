@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://iggym.github.io/agentic-engineering/sitemap.xml

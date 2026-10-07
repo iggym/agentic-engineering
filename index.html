@@ -5,6 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Agentic Engineering</title>
 <meta name="description" content="Orchestration, context, and tool use for agents built to work, not demo.">
+<link rel="canonical" href="https://iggym.github.io/agentic-engineering/">
+<link rel="alternate" type="application/atom+xml" title="Agentic Engineering" href="feed.xml">
+<meta property="og:title" content="Agentic Engineering">
+<meta property="og:description" content="Orchestration, context, and tool use for agents built to work, not demo.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://iggym.github.io/agentic-engineering/">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
@@ -15,7 +22,7 @@
   --bg-card:#151A21;
   --ink:#DDE3EA;
   --ink-dim:#8B93A1;
-  --ink-faint:#565E6C;
+  --ink-faint:#7A8394;
   --amber:#FFB454;
   --cyan:#6FD3E8;
   --stamp:#E8604C;
@@ -141,16 +148,18 @@ main{ max-width:1080px; margin:0 auto; padding:44px 24px 100px; }
 
 .card-meta{ font-family:var(--mono); font-size:10.5px; color:var(--ink-faint); display:flex; gap:12px; margin:22px 0 14px; }
 .status-chip{ display:inline-flex; align-items:center; gap:5px; }
+.root-chip{ color:var(--amber); }
 .status-chip .sdot{ width:5px; height:5px; border-radius:50%; background:var(--amber); box-shadow:0 0 4px var(--amber); }
 
 h2{ font-family:var(--display); font-weight:700; font-size:1.22rem; margin:0 0 10px; letter-spacing:-0.005em; }
 p.hook{ font-size:14.5px; color:#AEB4BF; margin:0 0 16px; min-height:1.6em; }
 .hook .cursor{ display:inline-block; width:7px; height:1em; background:var(--amber); vertical-align:text-bottom; margin-left:1px; animation:blink 1s steps(1) infinite; }
 
-.tags{ display:flex; gap:6px; flex-wrap:wrap; filter:blur(3px); opacity:.55; transition:filter .3s ease, opacity .3s ease; }
-.card:hover .tags, .card:focus-within .tags{ filter:blur(0); opacity:1; }
+.tags{ display:flex; gap:6px; flex-wrap:wrap; }
 .tag-pill{ font-family:var(--mono); font-size:9.5px; color:var(--ink-dim); border:1px solid var(--hair); padding:3px 8px; border-radius:20px; }
 
+.noscript-list{ font-family:var(--mono); font-size:13px; line-height:1.8; padding-left:18px; }
+.noscript-list a{ color:var(--cyan); }
 .empty{ text-align:center; padding:70px 20px; color:var(--ink-faint); grid-column:1/-1; font-family:var(--mono); }
 .empty .glyph{ color:var(--stamp); margin-bottom:10px; font-size:1rem; letter-spacing:.08em; border:1px solid var(--stamp); display:inline-block; padding:4px 10px; border-radius:3px; transform:rotate(-4deg); }
 
@@ -189,11 +198,11 @@ footer a.home{ font-family:var(--mono); font-size:12px; color:var(--cyan); text-
   <div class="pipeline-label"><span>Execution trace</span><span class="hint">click a stage to filter reports</span></div>
   <svg viewBox="0 0 600 200" role="img" aria-label="Agent execution pipeline: planner, tool call, retrieval, execute, verify, output">
     <path class="trace-path" d="M60,60 L220,60 L220,150 L380,150 L380,60 L540,60"/>
-    <g class="stage-hit" data-stage="planner" tabindex="0" role="button" aria-pressed="false">
+    <g class="stage-hit" data-stage="planning" tabindex="0" role="button" aria-pressed="false">
       <circle class="stage-ring" cx="60" cy="60" r="24"/>
       <text class="stage-label" x="60" y="106">planner</text>
     </g>
-    <g class="stage-hit" data-stage="tool" tabindex="0" role="button" aria-pressed="false">
+    <g class="stage-hit" data-stage="tool_call" tabindex="0" role="button" aria-pressed="false">
       <circle class="stage-ring" cx="220" cy="60" r="24"/>
       <text class="stage-label" x="220" y="106">tool call</text>
     </g>
@@ -229,6 +238,35 @@ footer a.home{ font-family:var(--mono); font-size:12px; color:var(--cyan); text-
 <main>
   <div class="section-label"><span>Field Reports</span><span class="count" id="feed-count">loading…</span></div>
   <div class="grid-feed" id="feed"></div>
+  <!-- build:noscript -->
+  <noscript>
+    <ul class="noscript-list">
+      <li><a href="articles/the-six-stage-autopsy.html">The Six-Stage Autopsy</a> — Start here. Agent failures show up in one stage and start in another. This is the method every field report on this site uses to tell the two apart.</li>
+      <li><a href="articles/the-retry-echo.html">The Retry Echo</a> — Your agent didn&#x27;t double-charge the customer because it reasoned badly. It retried a write it had no way to observe.</li>
+      <li><a href="articles/description-drift.html">Description Drift</a> — Your agent didn&#x27;t forget how to use the tool. The tool changed what it tells your agent, and nobody diffed it.</li>
+      <li><a href="articles/instruction-sediment.html">Instruction Sediment</a> — Your agent isn&#x27;t ignoring your rules. It&#x27;s obeying all of them, including the ones whose reason left the team months ago.</li>
+      <li><a href="articles/the-paper-plan.html">The Paper Plan</a> — Your agent&#x27;s plan looked right because nothing ever held execution to it. The plan is a document; the trajectory is what ran.</li>
+      <li><a href="articles/handoff-fiction.html">Handoff Fiction</a> — Your reviewers didn&#x27;t miss the bug. They reviewed the agent&#x27;s description of the change, and the description was fiction.</li>
+      <li><a href="articles/misdirection-in-the-tool.html">Misdirection in the Tool</a> — Your tool isn&#x27;t broken — your retrieval is lying to it.</li>
+      <li><a href="articles/diagnosing-verify-amnesia.html">Diagnosing Verify Amnesia</a> — The failure didn&#x27;t originate at the tool call; it originated at the Verify stage, which evaluated the 4,800th attempt in a vacuum.</li>
+      <li><a href="articles/divide-and-debug.html">Divide And Debug</a> — Multi-agent orchestration isn&#x27;t a capability upgrade; it is a debugging upgrade wearing a performance costume.</li>
+      <li><a href="articles/the-harness-mirage.html">The Harness Mirage: Why Your Agent Infrastructure Is Lying to You</a> — Most agent failures aren&#x27;t model reasoning errors—they&#x27;re the harness mirage: unconstrained execution loops passing dirty state through shallow verification gates.</li>
+      <li><a href="articles/stop-fixing-tool-syntax.html">Stop Fixing Tool Syntax</a> — Your agent rarely breaks at tool execution; it breaks two layers upstream when context truncation feeds it half a truth.</li>
+      <li><a href="articles/phantom-inheritance-subagents-remember.html">Phantom Inheritance: When Your Subagents Remember What You Told Them To Forget</a> — Isolation isn&#x27;t about what you don&#x27;t pass in the prompt — it&#x27;s about what your runtime smuggles back in the tool results.</li>
+      <li><a href="articles/when-one-subagents-memory-becomes-everyones-problem.html">When One Subagent&#x27;s Memory Becomes Everyone&#x27;s Problem</a> — Isolation doesn&#x27;t make agents smarter. It stops one bad memory from becoming a system-wide lie.</li>
+      <li><a href="articles/the-side-effect-slipstream.html">The Side-Effect Slipstream: Where Agent Runtime Risk Actually Lives</a> — Stop red-teaming prompts while ignoring unisolated runtimes. Most agent exploits leverage the side-effect slipstream: unmonitored state mutations passing through surface-level tool verification.</li>
+      <li><a href="articles/verify-gap.html">The Verify Gap</a> — The check that should catch the failure usually runs – but it looks at the wrong layer.</li>
+      <li><a href="articles/context-bleed.html">Context Bleed</a> — Your context isn&#x27;t isolated — it&#x27;s a shared wound that infects every subagent.</li>
+      <li><a href="articles/moat-trap.html">Moat Trap</a> — The model is a commodity — your harness is the only durable asset.</li>
+      <li><a href="articles/verify-theater.html">Verify Theater</a> — Your evals pass, your agents fail — because you&#x27;re checking answers, not trajectories.</li>
+      <li><a href="articles/diagnosing-the-phantom-argument.html">Diagnosing the Phantom Argument</a> — Your tool call didn&#x27;t fail because the model is dumb. It failed because of a Phantom Argument—a parameter ghostwritten by a 3-day-old RAG index.</li>
+      <li><a href="articles/green-light-lie-eval-failure.html">The Green-Light Lie: Your Agent Passed Eval and Failed the Job</a> — We grade agents like chatbots — final answer correct — while trajectory failures, harness variance, and flawed verifiers make leaderboards lie.</li>
+      <li><a href="articles/never-committed.html">Never Committed</a> — Your agent didn&#x27;t run out of context. Your state layer never committed.</li>
+      <li><a href="articles/catching-fire.html">Catching Fire</a> — Your shared-context architecture isn&#x27;t making your agents collaborative — it&#x27;s making them contagious.</li>
+      <li><a href="articles/final-answer-trap.html">The Final Answer Trap</a> — A passing final answer is the worst possible signal of agent capability.</li>
+    </ul>
+  </noscript>
+  <!-- /build:noscript -->
 </main>
 
 <footer>
@@ -251,6 +289,7 @@ footer a.home{ font-family:var(--mono); font-size:12px; color:var(--cyan); text-
   const clockEl = document.getElementById('clock');
 
   let allArticles = [];
+  const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   let activeStage = null;
 
   function fmtDate(iso){ try{ return new Date(iso+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }catch(e){return iso;} }
@@ -266,10 +305,10 @@ footer a.home{ font-family:var(--mono); font-size:12px; color:var(--cyan); text-
     const stampClass = isPinned ? 'entry' : 'resolved';
     const stampText = isPinned ? 'ENTRY POINT' : 'RESOLVED';
     return `
-    <a class="card ${isPinned?'pinned':''}" href="${a.path}" data-tags="${tagString}" data-title="${(a.title||'').toLowerCase()}" data-hook="${(a.hook||'').toLowerCase()}">
+    <a class="card ${isPinned?'pinned':''}" href="${a.path}" data-root="${a.root_cause_stage||''}" data-symptom="${a.symptom_stage||''}" data-tags="${tagString}" data-title="${(a.title||'').toLowerCase()}" data-hook="${(a.hook||'').toLowerCase()}">
       <span class="case-no">${caseNo(a, idx)}</span>
       <span class="stamp ${stampClass}">${stampText}</span>
-      <div class="card-meta"><span class="status-chip"><span class="sdot"></span>logged</span><span>${fmtDate(a.date)}</span><span>${a.reading_time_minutes||'—'} min read</span></div>
+      <div class="card-meta"><span class="status-chip"><span class="sdot"></span>logged</span><span>${fmtDate(a.date)}</span><span>${a.reading_time_minutes||'—'} min read</span>${a.root_cause_stage?`<span class="root-chip">root: ${a.root_cause_stage}</span>`:''}</div>
       <h2>${a.title}</h2>
       <p class="hook" data-full="${(a.hook||'').replace(/"/g,'&quot;')}"></p>
       <div class="tags">${tags}</div>
@@ -301,6 +340,8 @@ footer a.home{ font-family:var(--mono); font-size:12px; color:var(--cyan); text-
     const hooks = Array.from(document.querySelectorAll('.hook'));
     hooks.forEach((el, i)=>{
       const full = el.getAttribute('data-full') || '';
+      el.setAttribute('aria-label', full);
+      if(reduceMotion){ el.textContent = full; return; }
       let pos = 0;
       const speed = 14;
       const delay = i * 120;
@@ -352,7 +393,7 @@ footer a.home{ font-family:var(--mono); font-size:12px; color:var(--cyan); text-
     let visible = 0;
     cards.forEach(card=>{
       const haystack = card.getAttribute('data-tags') + ' ' + card.getAttribute('data-title') + ' ' + card.getAttribute('data-hook');
-      const stageOk = !activeStage || haystack.indexOf(activeStage) !== -1;
+      const stageOk = !activeStage || card.getAttribute('data-root') === activeStage || card.getAttribute('data-symptom') === activeStage;
       const queryOk = !q || haystack.indexOf(q) !== -1;
       const show = stageOk && queryOk;
       card.classList.toggle('hidden-by-filter', !show);
@@ -387,8 +428,8 @@ footer a.home{ font-family:var(--mono); font-size:12px; color:var(--cyan); text-
   });
 
   const stageHints = {
-    planner: 'planning traces — decomposition, task graphs, delegation.',
-    tool: 'tool-call traces — function calling, argument binding, schema drift.',
+    planning: 'planning traces — decomposition, task graphs, delegation.',
+    tool_call: 'tool-call traces — function calling, argument binding, schema drift.',
     retrieval: 'retrieval traces — memory, context assembly, grounding.',
     execute: 'execution traces — side effects, state commits, harness behavior.',
     verify: 'verification traces — evals, guardrails, output checking.',
@@ -404,7 +445,7 @@ footer a.home{ font-family:var(--mono); font-size:12px; color:var(--cyan); text-
       s.setAttribute('aria-pressed', on ? 'true' : 'false');
     });
     pipelineNote.innerHTML = activeStage
-      ? 'filtering on <b>' + activeStage + '</b> — ' + (stageHints[activeStage] || '')
+      ? 'reports with root cause or symptom at <b>' + activeStage + '</b> — ' + (stageHints[activeStage] || '')
       : '&nbsp;';
     applyFilter();
   }
