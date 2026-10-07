@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Retry Echo — Agentic Engineering</title>
+<meta name="description" content="Your agent didn't double-charge the customer because it reasoned badly. It retried a write it had no way to observe, so exactly-once belongs at the write boundary, not in the prompt.">
+<link rel="canonical" href="https://iggym.github.io/agentic-engineering/articles/the-retry-echo.html">
+<meta property="og:title" content="The Retry Echo — Agentic Engineering">
+<meta property="og:description" content="Your agent didn't double-charge the customer because it reasoned badly. It retried a write it had no way to observe.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://iggym.github.io/agentic-engineering/articles/the-retry-echo.html">
+<meta property="og:site_name" content="Agentic Engineering">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/article.css">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"TechArticle","headline":"The Retry Echo","description":"Your agent didn't double-charge the customer because it reasoned badly. It retried a write it had no way to observe.","datePublished":"2026-10-06","author":{"@type":"Organization","name":"Agentic Engineering"},"keywords":"idempotency, retries, side effects, execute, tool contracts, agent harness"}
+</script>
+</head>
+<body>
+<div class="topbar"><div class="topbar-row">
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="../index.html">agentic-engineering</a><span>/</span><span class="mid">Diagnostics</span><span class="mid">/</span>The Retry Echo</nav>
+  <span>6 min read</span>
+</div><div class="progress" aria-hidden="true"></div></div>
+
+<main class="wrap">
+<article>
+<header class="article-head">
+  <p class="eyebrow">Diagnostic · execute stage · 2026-10-06</p>
+  <h1>The Retry Echo</h1>
+  <p class="hook">Your agent didn't double-charge the customer because it reasoned badly. It retried a write it had no way to observe, so exactly-once belongs at the write boundary, not in the prompt.</p>
+  <p class="meta"><span>Research window <b>2026-07-01 → 2026-10-06</b></span><span>Audience <b>agent systems engineers</b></span><span><b>3</b> sourced stories</span><span class="stamp">root cause: execute</span></p>
+</header>
+
+<section id="setup">
+<h2><span class="num">01</span>The Setup</h2>
+<p><em>Composite scenario, assembled from the incident patterns documented in the sources below.</em></p>
+<p>A renewal agent has three tools: <code>charge_customer</code>, <code>grant_entitlement</code> and <code>send_receipt</code>. On a Tuesday, the payment provider's API slows down. The charge call times out after 30 seconds. The agent sees an error, reasons, correctly, that the renewal hasn't been confirmed, and calls <code>charge_customer</code> again. The second call succeeds. So did the first: it landed on the provider's side three seconds after the client gave up.</p>
+<p>The team's postmortem starts in the obvious place. They read the trace, see the model "decide" to retry, and add a line to the system prompt: <em>never retry a payment call</em>. A week later a different timeout leaves a renewal half-done, because the agent now refuses to retry a charge that genuinely never happened. They have swapped double charges for missed renewals.</p>
+<p>Which component failed: the model that retried, or the system that gave it nothing to look at before deciding?</p>
+</section>
+
+<section id="reframe">
+<h2><span class="num">02</span>The Reframe</h2>
+<div class="callout">Duplicate side effects are not a reasoning failure. They are a <strong>contract failure at the execute boundary</strong>. When nothing in the system can tell the agent whether a write landed, no prompt makes the right choice reliably.</div>
+<div class="bat">
+  <div class="before"><span class="k">Before</span>"The model retried when it shouldn't have, so we need a smarter model or a stricter prompt."</div>
+  <div class="after"><span class="k">After</span>"The model had to guess, because the tool offered no idempotency key and no read-back."</div>
+  <div class="turn"><span class="k">Turn</span>Exactly-once is a property of the write path. You can't instruct it into existence.</div>
+</div>
+</section>
+
+<section id="mechanism">
+<h2><span class="num">03</span>The Mechanism</h2>
+<div class="callout def"><span class="label">Coined term</span><strong>Retry echo</strong>: a duplicate side effect produced when an agent or its harness re-issues a write whose first outcome it could not observe.</div>
+<p>A tool-using agent stacks two retry layers. The <strong>harness</strong> retries at the transport level: a timeout, a 5xx, a dropped connection. The <strong>model</strong> retries at the reasoning level: it reads an error string and decides to try again. Neither layer knows whether the server already executed the request. A timeout tells you the client stopped waiting, not that the server stopped working.</p>
+<p>That leaves two kinds of fault. In the first, the outcome is <em>recoverable</em>: a read-back such as <code>get_charge(customer, period)</code> can show what happened, and a capable model told to act exactly once will check first. In the second, the outcome is <em>unobservable</em>: the request is still in flight, or the transport delivered it twice, or the read path is eventually consistent. Here, the model is choosing between a duplicate and a skipped step with no information. Better reasoning can't fix that.</p>
+<p>Durable execution makes it worse in a way most teams don't expect. When a checkpointing framework resumes after a crash, it has to decide what "resume" means for effects that had already fired. If it replays the last step, every write in that step echoes.</p>
+</section>
+
+<section id="trace">
+<h2><span class="num">04</span>Execution Trace</h2>
+<div class="trace" aria-label="Execution trace for a duplicated charge">
+  <div class="trace-head"><span>Renewal run · timeout on charge</span>
+    <span class="trace-controls"><button class="btn" type="button" data-action="step">Step through ▸</button><button class="btn" type="button" data-action="reveal" aria-pressed="false">Show root cause</button></span></div>
+  <ol>
+    <li data-role=""><span class="st">planning</span><span class="what">Plan: charge → grant entitlement → send receipt. Correct.</span></li>
+    <li data-role=""><span class="st">tool_call</span><span class="what"><code>charge_customer(id, amount)</code>, with no idempotency key because the schema doesn't offer one.</span></li>
+    <li data-role=""><span class="st">retrieval</span><span class="what">There's no read-back tool for "did this charge land?", so nothing to retrieve.</span></li>
+    <li data-role="root"><span class="st">execute <span class="tagline root">← root cause</span></span><span class="what">Client timeout at 30s, server commit at 33s. The harness and the model each retry blind, and the write executes twice.</span></li>
+    <li data-role=""><span class="st">verify</span><span class="what">Second call returns 200, so the step is marked "succeeded".</span></li>
+    <li data-role="symptom"><span class="st">output <span class="tagline sym">← symptom surfaces</span></span><span class="what">Customer sees two charges. The ticket lands on the AI team as "agent misbehaved".</span></li>
+  </ol>
+  <p class="trace-note">Click a stage, or step through. The amber stage is where the failure starts; the red one is where you'll notice it.</p>
+</div>
+</section>
+
+<section id="evidence">
+<h2><span class="num">05</span>The Evidence</h2>
+<div class="cards">
+  <div class="card">
+    <p class="src"><b>arXiv 2609.29095</b> · Jiapeng Li · Sep 2026</p>
+    <h3>The model matters only when the outcome is observable</h3>
+    <p>The paper builds <em>Limbo</em>, a deterministic sandbox of six services and twelve fault modes, and runs 25,930 episodes across nine recent models, three production agent harnesses and two contract variants. When an immediate read-back can reveal what happened, frontier models told to act exactly once almost never duplicate a lost-acknowledgement write (0.5%), and the model explains 53% of the explained variance. When it can't (request still in flight, or delivered twice), the <em>same</em> frontier models duplicate in 56% and 74% of episodes, and the tool contract explains 81%. Offering an idempotency key on every write cut the duplicate rate from 28% to 4%. The harness barely mattered.</p>
+    <p class="stage">Failure stage: execute (write contract)</p>
+  </div>
+  <div class="card">
+    <p class="src"><b>arXiv 2608.03836</b> · Sajjad Khan · Aug 2026</p>
+    <h3>"Resume" means different things in different frameworks</h3>
+    <p><em>Resume Means Resume</em> defines a six-property contract for checkpoint, interrupt and resume semantics, including <em>effect exactly-once</em>, and model-checks it in TLA+. The author reports that five widely deployed agent workflow frameworks answer "what does resume mean for effects that already fired?" differently, and none exposes a machine-checkable contract. One finding: LangGraph 1.2.9 re-executed durably recorded work after a real SIGKILL. That makes it exactly-once across interrupts but at-least-once across crashes, on the same API.</p>
+    <p class="stage">Failure stage: execute (persistence / resume)</p>
+  </div>
+  <div class="card">
+    <p class="src"><b>DEV Community</b> · Sven Schuchardt · 2026</p>
+    <h3>"Every AI agent failure I've debugged in 2026 was an idempotency problem"</h3>
+    <p>A practitioner write-up of production incidents: one customer received the same onboarding email fourteen times in nine minutes, a B2B account was charged twice for one subscription renewal, and one order appeared in the order system as three. The common thread is agents that retry on timeouts, 5xx errors and ambiguous tool responses, against tool calls never designed to be retried.</p>
+    <p class="stage">Failure stage: execute (surfaced at output)</p>
+  </div>
+</div>
+<h3>The hidden connection</h3>
+<p>The three sources look at different layers: model behaviour, persistence semantics and production tickets. They agree on where the fix lives. When the system can observe the outcome, a good model behaves. When it can't, only the contract (idempotency keys, deduplication at the boundary, an honest resume semantics) prevents the echo. The harness you picked and the model you upgraded to are mostly noise.</p>
+</section>
+
+<section id="counter">
+<h2><span class="num">06</span>Argue the Other Side</h2>
+<p>The strongest objection: <em>the model does matter</em>. In the recoverable case, Li's numbers show weaker models duplicating far more often than frontier ones, so a model upgrade is a real fix for part of the problem. That's true. If most of your faults are lost acknowledgements with a working read path, a better model plus an "act exactly once" instruction buys a lot.</p>
+<p>But you don't get to choose which faults you have. Timeouts during provider incidents are exactly the "still in flight" case where the model can't win, and they arrive in bursts, on your busiest day. A second objection is cost: threading idempotency keys through every write tool is real work, and some downstream APIs don't accept them. Then you need a deduplication store on your side of the boundary. It's more code, but the alternative is a support queue.</p>
+</section>
+
+<section id="misdiagnosed">
+<h2><span class="num">07</span>Misdiagnosed vs. Actual</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th>Common fix</th><th>What actually works</th></tr></thead>
+  <tbody>
+    <tr><td class="wrong">"Never retry payments" in the system prompt</td><td class="right">Idempotency key on every state-mutating tool, derived from run + step + arguments</td></tr>
+    <tr><td class="wrong">Upgrade to a stronger model</td><td class="right">Add a read-back tool so the outcome becomes observable before any retry</td></tr>
+    <tr><td class="wrong">Lower harness retry count to zero</td><td class="right">Keep transport retries, but only behind a dedup store at the boundary</td></tr>
+    <tr><td class="wrong">Trust the framework's "durable" resume</td><td class="right">Test crash-resume explicitly: kill the worker mid-step and count side effects</td></tr>
+  </tbody>
+</table></div>
+</section>
+
+<section id="fix">
+<h2><span class="num">08</span>The Fix: Triage Checklist</h2>
+<ul class="check">
+  <li>List every tool that mutates external state. For each, record: does it accept an idempotency key? Is there a read-back?</li>
+  <li>Derive keys deterministically from <code>run_id</code>, step index and canonical arguments, never from a random UUID generated per attempt.</li>
+  <li>Put a dedup store (key → result) in front of writes whose downstream API has no key support.</li>
+  <li>Make the "outcome unknown" state explicit in the tool result, rather than a generic error string the model will reinterpret.</li>
+  <li>Count side effects, not tool calls, in your traces: one business action should map to one external effect.</li>
+  <li>Chaos-test resume: SIGKILL the worker between "write sent" and "checkpoint saved", then resume and diff the external state.</li>
+</ul>
+<p>The guard is small and harness-agnostic, which matches the finding that a key-attaching guard transfers across harnesses unchanged:</p>
+<pre><code><span class="c"># wrap every state-mutating tool once, at registration time</span>
+<span class="k2">import</span> hashlib, json
+
+<span class="k2">def</span> idempotent(tool, store):
+    <span class="k2">def</span> call(run_id, step, **args):
+        key = hashlib.sha256(json.dumps(
+            [run_id, step, tool.__name__, args], sort_keys=<span class="k2">True</span>).encode()).hexdigest()
+        <span class="k2">if</span> (prior := store.get(key)) <span class="k2">is not None</span>:
+            <span class="k2">return</span> prior                      <span class="c"># echo suppressed</span>
+        result = tool(**args, idempotency_key=key)
+        store.put(key, result)
+        <span class="k2">return</span> result
+    <span class="k2">return</span> call</code></pre>
+</section>
+
+<section id="recall">
+<h2><span class="num">09</span>Recall Check</h2>
+<details><summary>Why can't a better prompt fix duplicates when a request is still in flight?</summary><p>Because the agent has no information about whether the first write landed. It's choosing between a duplicate and a skipped step blind. Only the contract (keys, dedup, read-back) changes what it can know.</p></details>
+<details><summary>In Li's Limbo study, what explained most of the variance when outcomes were unobservable?</summary><p>The tool contract, at 81%. The model explained most of the variance only when a read-back could reveal the outcome.</p></details>
+<details><summary>What does "exactly-once across interrupts, at-least-once across crashes" mean for your agent?</summary><p>A planned pause and resume is safe, but a worker crash can replay a step whose side effects already fired. Every write in that step can echo.</p></details>
+</section>
+
+<section id="today">
+<h2><span class="num">10</span>Do This Today</h2>
+<div class="today"><span class="label">30 minutes</span>Grep your tool registry for every tool whose name starts with <code>create_</code>, <code>send_</code>, <code>charge_</code>, <code>post_</code> or <code>update_</code>. For each one, write "key: yes/no, read-back: yes/no" in a table. Every "no/no" row is a retry echo waiting for your next provider incident.</div>
+</section>
+
+<section id="sources">
+<h2><span class="num">11</span>Sources</h2>
+<ol class="sources">
+  <li>Jiapeng Li, “Where Does Exactly-Once Live? Model, Harness, and Tool-Contract Effects on Duplicate Side Effects in LLM Agents,” arXiv:2609.29095 <span class="d">· Sep 2026</span> · <a href="https://arxiv.org/abs/2609.29095">arxiv.org/abs/2609.29095</a></li>
+  <li>Sajjad Khan, “Resume Means Resume: A Machine-Checked Conformance Contract for Checkpoint, Interrupt, and Resume Semantics in Workflow Persistence Layers,” arXiv:2608.03836 <span class="d">· Aug 2026</span> · <a href="https://arxiv.org/abs/2608.03836">arxiv.org/abs/2608.03836</a></li>
+  <li>Sven Schuchardt, “Every AI Agent Failure I've Debugged in 2026 was an Idempotency Problem,” DEV Community <span class="d">· 2026</span> · <a href="https://dev.to/sven_schuchardt_0aa51663a/every-ai-agent-failure-ive-debugged-in-2026-was-an-idempotency-problem-5dl0">dev.to</a></li>
+  <li>Background: “The Idempotency Problem in Agentic Tool Calling,” TianPan.co <span class="d">· 2026-04-19 (outside window)</span> · <a href="https://tianpan.co/blog/2026/04/19/idempotency-agentic-tool-calling-saga-deduplication">tianpan.co</a></li>
+</ol>
+</section>
+
+<section id="related">
+<h2><span class="num">12</span>Related Reports</h2>
+<div class="related">
+  <a href="the-side-effect-slipstream.html"><span class="t">side-effect slipstream</span>Where agent runtime risk actually lives</a>
+  <a href="never-committed.html"><span class="t">never committed</span>When the state layer silently drops writes</a>
+  <a href="the-harness-mirage.html"><span class="t">harness mirage</span>Why your agent infrastructure is lying to you</a>
+</div>
+</section>
+</article>
+</main>
+
+<footer class="article-foot">
+  <p><a href="../index.html">← Back to field reports</a></p>
+  <p>Agentic Engineering · orchestration, context, and tool use for agents built to work, not demo.</p>
+</footer>
+<script src="../assets/article.js" defer></script>
+</body>
+</html>

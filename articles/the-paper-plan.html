@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Paper Plan — Agentic Engineering</title>
+<meta name="description" content="Your agent's plan looked right because nothing ever held execution to it. The plan is a document; the trajectory is what ran.">
+<link rel="canonical" href="https://iggym.github.io/agentic-engineering/articles/the-paper-plan.html">
+<meta property="og:title" content="The Paper Plan — Agentic Engineering">
+<meta property="og:description" content="Your agent's plan looked right because nothing ever held execution to it. The plan is a document; the trajectory is what ran.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://iggym.github.io/agentic-engineering/articles/the-paper-plan.html">
+<meta property="og:site_name" content="Agentic Engineering">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/article.css">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"TechArticle","headline":"The Paper Plan","description":"Your agent's plan looked right because nothing ever held execution to it. The plan is a document; the trajectory is what ran.","datePublished":"2026-10-06","author":{"@type":"Organization","name":"Agentic Engineering"},"keywords":"planning, plan mode, plan-and-execute, planner-actor, orchestration, trajectory"}
+</script>
+</head>
+<body>
+<div class="topbar"><div class="topbar-row">
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="../index.html">agentic-engineering</a><span>/</span><span class="mid">Diagnostics</span><span class="mid">/</span>The Paper Plan</nav>
+  <span>6 min read</span>
+</div><div class="progress" aria-hidden="true"></div></div>
+
+<main class="wrap">
+<article>
+<header class="article-head">
+  <p class="eyebrow">Diagnostic · planning stage · 2026-10-06</p>
+  <h1>The Paper Plan</h1>
+  <p class="hook">Your agent's plan looked right because nothing ever held execution to it. The plan is a document; the trajectory is what ran.</p>
+  <p class="meta"><span>Research window <b>2026-07-15 → 2026-10-06</b></span><span>Audience <b>agent architects</b></span><span><b>4</b> sourced stories</span><span class="stamp">root cause: planning</span></p>
+</header>
+
+<section id="setup">
+<h2><span class="num">01</span>The Setup</h2>
+<p><em>Composite scenario.</em></p>
+<p>A data-migration agent is asked to "move the customer table to the new schema, keeping EU records in the EU region." Its plan is a model of clarity: five numbered steps, region handling called out in step 2, a validation pass in step 5. The team prints it in the PR description. Reviewers approve the <em>plan</em>.</p>
+<p>The run finishes green. Two days later, someone notices that EU records were copied to the default region. When the team replays the trajectory, they find that step 2 was executed as a generic copy. The region constraint lived in the plan's prose but never reached the tool call. Step 5 validated row counts, and the counts matched.</p>
+<p>The postmortem blames the executor: wrong tool arguments. They add a few-shot example of region-aware copies. But the plan said the right thing. Why didn't it matter?</p>
+</section>
+
+<section id="reframe">
+<h2><span class="num">02</span>The Reframe</h2>
+<div class="callout">Most agent plans are <strong>declarations, not contracts</strong>. Nothing in the harness checks that execution follows them, so a correct plan and a divergent trajectory can coexist without anyone noticing, and people review the plan.</div>
+<div class="bat">
+  <div class="before"><span class="k">Before</span>"The plan was good, so the failure must be in execution."</div>
+  <div class="after"><span class="k">After</span>"The plan was never binding, so execution was free to drop what mattered."</div>
+  <div class="turn"><span class="k">Turn</span>A plan you can't diff against the trajectory is a press release.</div>
+</div>
+</section>
+
+<section id="mechanism">
+<h2><span class="num">03</span>The Mechanism</h2>
+<div class="callout def"><span class="label">Coined term</span><strong>Paper plan</strong>: a plan an agent declares but that nothing in the harness enforces or checks, so execution can diverge silently while the plan still reads as correct.</div>
+<p>In the common <em>plan-then-ReAct</em> pattern, the model writes a plan into its context and then runs a free-form loop that is supposed to follow it. Three things go wrong between the two:</p>
+<ul class="check">
+  <li><strong>Structure decay.</strong> As the loop runs, the plan becomes old context. Its ordering and branching are reinterpreted, compressed or forgotten, especially in long plans.</li>
+  <li><strong>Grounding loss.</strong> Constraints from the user's request (a region, a language, a limit) make it into the plan's wording but not into the arguments that execution actually uses.</li>
+  <li><strong>State disagreement.</strong> In planner/actor splits, the two agents hold different beliefs about the same facts ("is the table already migrated?") and neither one checks.</li>
+</ul>
+<p>The failure surfaces at <em>execute</em>: wrong arguments, a skipped step. But it starts at <em>planning</em>, because the plan was produced in a form that couldn't be checked against what came next.</p>
+</section>
+
+<section id="trace">
+<h2><span class="num">04</span>Execution Trace</h2>
+<div class="trace" aria-label="Execution trace for a migration that dropped a region constraint">
+  <div class="trace-head"><span>Migration agent · region constraint dropped</span>
+    <span class="trace-controls"><button class="btn" type="button" data-action="step">Step through ▸</button><button class="btn" type="button" data-action="reveal" aria-pressed="false">Show root cause</button></span></div>
+  <ol>
+    <li data-role="root"><span class="st">planning <span class="tagline root">← root cause</span></span><span class="what">Five-step plan written as prose. "Keep EU records in EU" is a sentence, not a checkable constraint on step 2.</span></li>
+    <li data-role=""><span class="st">tool_call</span><span class="what"><code>copy_table(src, dst)</code>, with no region argument. The constraint never reached the call.</span></li>
+    <li data-role=""><span class="st">retrieval</span><span class="what">Schema lookups are correct.</span></li>
+    <li data-role="symptom"><span class="st">execute <span class="tagline sym">← symptom surfaces</span></span><span class="what">EU rows land in the default region. Every call succeeds.</span></li>
+    <li data-role=""><span class="st">verify</span><span class="what">Row counts match, so validation passes. It checked the plan's wording ("validate"), not the plan's constraint.</span></li>
+    <li data-role=""><span class="st">output</span><span class="what">"Migration complete." Plan and summary both look perfect.</span></li>
+  </ol>
+  <p class="trace-note">Click a stage, or step through. The amber stage is where the failure starts; the red one is where you'll notice it.</p>
+</div>
+</section>
+
+<section id="evidence">
+<h2><span class="num">05</span>The Evidence</h2>
+<div class="cards">
+  <div class="card">
+    <p class="src"><b>arXiv 2609.38108</b> · Sep 2026</p>
+    <h3>“Do LLM Agents Execute the Plans They Declare?”</h3>
+    <p>The authors name the <em>Plan Declaration–Execution Gap</em> and measure it. Across three benchmarks, generic Plan+ReAct preserved the declared planning structure in only 22–45% of trajectories, and the gap was worse for longer plans. Routing each task to a pattern-specific executor that enforces the declared structure raised success from 0.48 to 0.92 on ALFWorld and from 0.36 to 0.44 on SWE-bench Verified. One caveat: current models didn't reliably choose the best planning mode on their own.</p>
+    <p class="stage">Failure stage: planning → execute</p>
+  </div>
+  <div class="card">
+    <p class="src"><b>arXiv 2609.38891</b> · Sep 2026</p>
+    <h3>Planner-actor state mismatch</h3>
+    <p><em>Consistent Plan-Act for Long-Horizon Agentic Tasks</em> asked planner and actor agents for structured state assertions and compared them programmatically. They found systematic disagreement about the same task-relevant facts, a failure mode they call <em>planner-actor state mismatch</em>. Feeding the detected contradictions back to both agents, and giving them task-relevant state, reduced mismatch and improved task performance.</p>
+    <p class="stage">Failure stage: planning (shared state)</p>
+  </div>
+  <div class="card">
+    <p class="src"><b>arXiv 2608.03735</b> · Pahuja et al. · 2026-08-04</p>
+    <h3>Task-critical information lost between request and plan</h3>
+    <p>Studying the planner as the "request-to-action interface" of a multi-agent system, the authors derive a taxonomy of planning-grounding failures. In these failures, task-critical information is lost when a request becomes an executable plan. These failures made up a growing share of failed runs as language resources declined. Making the taxonomy's key aspects explicit to the planner and sub-agents raised accuracy on multilingual GAIA by 5.6 points on average across eleven languages.</p>
+    <p class="stage">Failure stage: planning (grounding)</p>
+  </div>
+  <div class="card">
+    <p class="src"><b>arXiv 2607.23670</b> · Jul 2026</p>
+    <h3>“Plans Work in Mysterious Ways”</h3>
+    <p>In a controlled study (N=24) of a Plan Mode for spreadsheet agents, participants preferred Plan Mode and it changed how they exchanged requirements with the tool. But the researchers found no notable differences in the final workbooks. The plan improved the collaboration more than the artifact.</p>
+    <p class="stage">Failure stage: planning (human-facing)</p>
+  </div>
+</div>
+<h3>The hidden connection</h3>
+<p>All four papers find value in planning, and all four find that the value leaks before it reaches execution. The fixes they test have a common shape: make the plan structured enough that something other than the model can hold execution to it, whether that's a router, a state-assertion diff or an explicit constraint schema. Plans help when they're binding. Mostly, they aren't.</p>
+</section>
+
+<section id="counter">
+<h2><span class="num">06</span>Argue the Other Side</h2>
+<p>The objection: <em>rigid, enforced plans are brittle</em>. Real tasks reveal new information mid-run. A ReAct loop that can deviate from its plan is a feature, and forcing execution to match a plan written before the agent looked at the data will produce faithful execution of the wrong plan.</p>
+<p>That's correct, and it's why the target isn't "never deviate". The target is "never deviate <em>silently</em>". A replan should be an explicit event, logged and diffed, with constraints carried forward. The 2609.38108 result also cuts both ways: enforcement helped a lot on ALFWorld and only modestly on SWE-bench Verified, where tasks are more open-ended. And the December 2025 study <em>Towards a Science of Scaling Agent Systems</em> found that on sequential planning tasks, every multi-agent variant it tested degraded performance by 39–70%. More planner/actor structure isn't automatically better.</p>
+</section>
+
+<section id="misdiagnosed">
+<h2><span class="num">07</span>Misdiagnosed vs. Actual</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th>Common fix</th><th>What actually works</th></tr></thead>
+  <tbody>
+    <tr><td class="wrong">Few-shot the executor on the step that failed</td><td class="right">Carry user constraints as typed fields on each plan step</td></tr>
+    <tr><td class="wrong">Have humans review the plan before running</td><td class="right">Have the harness diff the trajectory against the plan after running</td></tr>
+    <tr><td class="wrong">A bigger planner model</td><td class="right">Structured planner/actor state assertions, compared every step</td></tr>
+    <tr><td class="wrong">Validate the output's shape (row counts)</td><td class="right">Validate each plan constraint as a postcondition</td></tr>
+  </tbody>
+</table></div>
+</section>
+
+<section id="fix">
+<h2><span class="num">08</span>The Fix: Triage Checklist</h2>
+<ul class="check">
+  <li>Emit plans as data (JSON steps with tool, required arguments, preconditions and postconditions), not just prose.</li>
+  <li>Extract hard constraints from the user request into a list, and attach each to the step that must honour it.</li>
+  <li>After each step, check its postconditions mechanically. Failing one triggers an explicit replan, not a silent continue.</li>
+  <li>Log a plan/trajectory diff for every run: steps skipped, reordered or added.</li>
+  <li>In planner/actor systems, have both emit state assertions for key facts and diff them each turn.</li>
+  <li>Track "plan adherence rate" alongside task success in your evals.</li>
+</ul>
+<pre><code><span class="c"># make the plan binding: constraints travel with steps, and are checked after each one</span>
+plan = [
+  {<span class="s">"step"</span>: <span class="s">"copy_eu"</span>, <span class="s">"tool"</span>: <span class="s">"copy_table"</span>,
+   <span class="s">"args"</span>: {<span class="s">"filter"</span>: <span class="s">"region = 'EU'"</span>, <span class="s">"dst_region"</span>: <span class="s">"eu-west-1"</span>},
+   <span class="s">"post"</span>: [<span class="s">"count(dst.eu_west_1) == count(src WHERE region='EU')"</span>,
+            <span class="s">"count(dst.default WHERE region='EU') == 0"</span>]},
+]
+<span class="k2">for</span> step <span class="k2">in</span> plan:
+    result = run(step)
+    failed = [p <span class="k2">for</span> p <span class="k2">in</span> step[<span class="s">"post"</span>] <span class="k2">if not</span> check(p)]
+    <span class="k2">if</span> failed:
+        replan(reason=failed, carry=step[<span class="s">"args"</span>])   <span class="c"># deviation is explicit, never silent</span></code></pre>
+</section>
+
+<section id="recall">
+<h2><span class="num">09</span>Recall Check</h2>
+<details><summary>What fraction of Plan+ReAct trajectories preserved the declared plan structure in 2609.38108?</summary><p>Only 22–45% across three benchmarks, and less for longer plans.</p></details>
+<details><summary>Why does a paper plan surface at the execute stage?</summary><p>The visible error is a wrong argument or a skipped step during execution. The cause is upstream: the plan was never in a form the harness could hold execution to.</p></details>
+<details><summary>Is the fix "never deviate from the plan"?</summary><p>No. It's "never deviate silently". Replanning should be an explicit, logged event that carries constraints forward.</p></details>
+</section>
+
+<section id="today">
+<h2><span class="num">10</span>Do This Today</h2>
+<div class="today"><span class="label">30 minutes</span>Take your last five failed agent runs. For each one, put the declared plan next to the actual tool-call sequence and mark every step that was skipped, merged or altered. If more than one in five runs diverged without an explicit replan, you're running on paper plans.</div>
+</section>
+
+<section id="sources">
+<h2><span class="num">11</span>Sources</h2>
+<ol class="sources">
+  <li>“Do LLM Agents Execute the Plans They Declare? From Planning-Mode Declaration to Pattern-Specific Execution,” arXiv:2609.38108 <span class="d">· Sep 2026</span> · <a href="https://arxiv.org/abs/2609.38108">arxiv.org/abs/2609.38108</a></li>
+  <li>“Consistent Plan-Act for Long-Horizon Agentic Tasks,” arXiv:2609.38891 <span class="d">· Sep 2026</span> · <a href="https://arxiv.org/abs/2609.38891">arxiv.org/abs/2609.38891</a></li>
+  <li>Pahuja et al., “An Actionable Diagnosis of Multilingual, Multi-Agent Planning Failures,” arXiv:2608.03735 <span class="d">· 2026-08-04</span> · <a href="https://arxiv.org/abs/2608.03735">arxiv.org/abs/2608.03735</a></li>
+  <li>“Plans Work in Mysterious Ways: Evaluating a Plan Mode for Spreadsheet Agents,” arXiv:2607.23670 <span class="d">· Jul 2026</span> · <a href="https://arxiv.org/abs/2607.23670">arxiv.org/abs/2607.23670</a></li>
+  <li>Background: “Towards a Science of Scaling Agent Systems,” arXiv:2512.08296 <span class="d">· Dec 2025 (outside window)</span> · <a href="https://arxiv.org/abs/2512.08296">arxiv.org/abs/2512.08296</a></li>
+</ol>
+</section>
+
+<section id="related">
+<h2><span class="num">12</span>Related Reports</h2>
+<div class="related">
+  <a href="divide-and-debug.html"><span class="t">divide and debug</span>Orchestration as a debugging upgrade</a>
+  <a href="final-answer-trap.html"><span class="t">final answer trap</span>Why passing outputs hide bad trajectories</a>
+  <a href="verify-theater.html"><span class="t">verify theater</span>Checking answers, not trajectories</a>
+</div>
+</section>
+</article>
+</main>
+
+<footer class="article-foot">
+  <p><a href="../index.html">← Back to field reports</a></p>
+  <p>Agentic Engineering · orchestration, context, and tool use for agents built to work, not demo.</p>
+</footer>
+<script src="../assets/article.js" defer></script>
+</body>
+</html>
