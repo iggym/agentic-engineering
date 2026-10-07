@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Instruction Sediment — Agentic Engineering</title>
+<meta name="description" content="Your agent isn't ignoring your rules. It's obeying all of them, including the ones whose reason left the team months ago.">
+<link rel="canonical" href="https://iggym.github.io/agentic-engineering/articles/instruction-sediment.html">
+<meta property="og:title" content="Instruction Sediment — Agentic Engineering">
+<meta property="og:description" content="Your agent isn't ignoring your rules. It's obeying all of them, including the ones whose reason left the team months ago.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://iggym.github.io/agentic-engineering/articles/instruction-sediment.html">
+<meta property="og:site_name" content="Agentic Engineering">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/article.css">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"TechArticle","headline":"Instruction Sediment","description":"Your agent isn't ignoring your rules. It's obeying all of them, including the ones whose reason left the team months ago.","datePublished":"2026-10-06","author":{"@type":"Organization","name":"Agentic Engineering"},"keywords":"CLAUDE.md, AGENTS.md, context files, memory, retrieval, context engineering"}
+</script>
+</head>
+<body>
+<div class="topbar"><div class="topbar-row">
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="../index.html">agentic-engineering</a><span>/</span><span class="mid">Diagnostics</span><span class="mid">/</span>Instruction Sediment</nav>
+  <span>6 min read</span>
+</div><div class="progress" aria-hidden="true"></div></div>
+
+<main class="wrap">
+<article>
+<header class="article-head">
+  <p class="eyebrow">Diagnostic · retrieval stage · 2026-10-06</p>
+  <h1>Instruction Sediment</h1>
+  <p class="hook">Your agent isn't ignoring your rules. It's obeying all of them, including the ones whose reason left the team months ago.</p>
+  <p class="meta"><span>Research window <b>2026-07-01 → 2026-10-06</b></span><span>Audience <b>teams using coding agents</b></span><span><b>3</b> sourced stories</span><span class="stamp">root cause: retrieval</span></p>
+</header>
+
+<section id="setup">
+<h2><span class="num">01</span>The Setup</h2>
+<p><em>Composite scenario.</em></p>
+<p>A team's coding agent keeps doing something strange: every new API handler gets wrapped in a hand-rolled retry helper that the team deprecated in spring. Reviewers delete it, then the next PR brings it back. Someone opens <code>CLAUDE.md</code> and finds the cause on line 212: <em>"Always wrap outbound calls in <code>withRetry()</code>."</em></p>
+<p>Nobody remembers who added it or why. It might have been an incident workaround. It might still matter for one legacy service. The file is 400 lines long, and every line looks like this one: confident, imperative, unexplained. Deleting it feels risky, so they add line 401: <em>"Do NOT use <code>withRetry()</code> for new handlers."</em> Now the agent has two rules that contradict each other.</p>
+<p>The behaviour shows up in execution. Where does it start?</p>
+</section>
+
+<section id="reframe">
+<h2><span class="num">02</span>The Reframe</h2>
+<div class="callout">An instruction file is a retrieval system with no eviction policy. Rules go in for a reason, the reason never gets written down, and so <strong>nothing ever comes out</strong>. The agent faithfully loads all of it on every run.</div>
+<div class="bat">
+  <div class="before"><span class="k">Before</span>"The agent ignores CLAUDE.md, so we need stronger wording, capital letters, more rules."</div>
+  <div class="after"><span class="k">After</span>"The agent obeys a file full of orphaned rules that nobody dares delete."</div>
+  <div class="turn"><span class="k">Turn</span>Your context file needs a garbage collector, and the only one that works is recorded rationale.</div>
+</div>
+</section>
+
+<section id="mechanism">
+<h2><span class="num">03</span>The Mechanism</h2>
+<div class="callout def"><span class="label">Coined term</span><strong>Instruction sediment</strong>: agent instructions whose rationale has been lost, so they can't be safely removed and keep loading into every run's context.</div>
+<p>The asymmetry is simple. Adding a rule after the agent makes a mistake costs one line and a minute. Removing a rule safely means knowing which past mistake it prevents. If you don't know, you'd have to test every combination of remaining rules to rule out a regression. Chakrabarti's August 2026 paper formalises this: appending is O(1), deleting without risking a regression is O(2ⁿ). Files grow without bound.</p>
+<p>The cost lands at the retrieval stage, because a context file <em>is</em> retrieval: it's pulled into the prompt on every run, unconditionally, whether or not the task needs it. Each orphaned rule is a little irrelevant context. Some are actively wrong. Contradictory pairs force the model to guess which one wins. The resulting behaviour looks like an execution bug or a model quirk, so teams respond by adding more rules.</p>
+</section>
+
+<section id="trace">
+<h2><span class="num">04</span>Execution Trace</h2>
+<div class="trace" aria-label="Execution trace for a deprecated helper reappearing">
+  <div class="trace-head"><span>Coding agent · deprecated helper returns</span>
+    <span class="trace-controls"><button class="btn" type="button" data-action="step">Step through ▸</button><button class="btn" type="button" data-action="reveal" aria-pressed="false">Show root cause</button></span></div>
+  <ol>
+    <li data-role=""><span class="st">planning</span><span class="what">Task: "add a handler for the billing webhook." Plan is reasonable.</span></li>
+    <li data-role="root"><span class="st">retrieval <span class="tagline root">← root cause</span></span><span class="what">401-line CLAUDE.md loaded whole. Line 212 says to always use <code>withRetry()</code>, line 401 says not to. Neither says why.</span></li>
+    <li data-role=""><span class="st">tool_call</span><span class="what">Agent reads the existing handlers, and half of them still use the old helper.</span></li>
+    <li data-role="symptom"><span class="st">execute <span class="tagline sym">← symptom surfaces</span></span><span class="what">Writes the handler with <code>withRetry()</code>, siding with the older, more emphatic rule.</span></li>
+    <li data-role=""><span class="st">verify</span><span class="what">Tests pass. The helper still works, it's just deprecated.</span></li>
+    <li data-role=""><span class="st">output</span><span class="what">Reviewer deletes it again. Someone proposes line 402.</span></li>
+  </ol>
+  <p class="trace-note">Click a stage, or step through. The amber stage is where the failure starts; the red one is where you'll notice it.</p>
+</div>
+</section>
+
+<section id="evidence">
+<h2><span class="num">05</span>The Evidence</h2>
+<div class="cards">
+  <div class="card">
+    <p class="src"><b>arXiv 2608.11095</b> · Kushal Chakrabarti · Aug 2026</p>
+    <h3>“Why Does CLAUDE.md Keep Growing? Catastrophic Remembering in Agentic Coding”</h3>
+    <p>Across 247,694 instruction lifetimes in 1,867 GitHub repositories, agent instruction files grew until the history ended or someone rewrote the whole file. After a rewrite they grew back <em>faster</em>: +4.1% instructions per commit before a rewrite, +4.9% after. The paper's proposed fix is cheap. Write the rationale down as a comment next to the rule at the moment you add it. The paper reports that this removes 99.3% of the excess growth.</p>
+    <p class="stage">Failure stage: retrieval (what gets loaded, and why it never leaves)</p>
+  </div>
+  <div class="card">
+    <p class="src"><b>Generative Labs</b> · Prakhar Khatri · Jul 2026</p>
+    <h3>“CLAUDE.md Files Make Coding Agents Cheaper, Not More Correct”</h3>
+    <p>A controlled 288-attempt ablation ran Claude Code and Codex on the same tasks and repositories, scored against each repo's own known-good tests, varying only how project instructions were supplied. It found no measurable correctness gain from context files. The repositories' real instruction files never turned a near-miss into a pass, on either agent. The efficiency gains that earlier work reported are real. The correctness gains didn't show up.</p>
+    <p class="stage">Failure stage: retrieval</p>
+  </div>
+  <div class="card">
+    <p class="src"><b>MSR 2026</b> study of 466 projects, via usewire.io · 2026</p>
+    <h3>Half of AGENTS.md files are never updated after the first commit</h3>
+    <p>A study accepted to the Mining Software Repositories conference scanned 10,000 active repositories (about 5% had adopted an AI context file) and analysed 155 AGENTS.md files in depth. It identified five ways developers write agent context. It also found that half of the files are never updated after the commit that created them. The format exists, but the practice of maintaining it mostly doesn't.</p>
+    <p class="stage">Failure stage: retrieval (staleness)</p>
+  </div>
+</div>
+<h3>The hidden connection</h3>
+<p>The three studies measure different things: growth, correctness and staleness. Together they describe one lifecycle. Files are written once (MSR), appended to forever without rationale (Chakrabarti), and the result doesn't buy the correctness teams assume it does (Khatri). Earlier in 2026, ETH Zurich's evaluation found context files raised inference cost by over 20% without improving success rates. Sediment is how you pay that cost.</p>
+</section>
+
+<section id="counter">
+<h2><span class="num">06</span>Argue the Other Side</h2>
+<p>The counter-argument has data behind it. Lulla et al. measured AGENTS.md files cutting median agent runtime by 28.64% and output tokens by 16.58%. Khatri's study is consistent with that: cheaper, not more correct. Cheaper is worth a lot at scale, and a good context file clearly encodes useful conventions.</p>
+<p>So this isn't an argument to delete your context file. It's an argument against an <em>unmaintained</em> one. The efficiency win comes from accurate, relevant facts about the repo. Sediment, meaning rules that are stale, contradictory or unexplained, is the part that adds tokens without adding accuracy. The open question, which none of the sources settles, is how much of a typical file is sediment. The 50% never-updated figure suggests it's a lot.</p>
+</section>
+
+<section id="misdiagnosed">
+<h2><span class="num">07</span>Misdiagnosed vs. Actual</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th>Common fix</th><th>What actually works</th></tr></thead>
+  <tbody>
+    <tr><td class="wrong">Add a stronger rule ("NEVER", in caps)</td><td class="right">Find and delete the older rule it contradicts</td></tr>
+    <tr><td class="wrong">Auto-generate a fresh file with <code>/init</code></td><td class="right">Rewrite by hand, with a one-line rationale per rule</td></tr>
+    <tr><td class="wrong">Rewrite the whole file once a year</td><td class="right">Rationale at write time, so pruning is a cheap read, not an archaeology dig</td></tr>
+    <tr><td class="wrong">One giant root file for everything</td><td class="right">Scoped files next to the code they govern, loaded only when relevant</td></tr>
+  </tbody>
+</table></div>
+</section>
+
+<section id="fix">
+<h2><span class="num">08</span>The Fix: Triage Checklist</h2>
+<ul class="check">
+  <li>Count the lines in your agent instruction files and chart them against git history. Is the line going up and to the right?</li>
+  <li>Require a <code>why:</code> comment on every new rule: the incident, PR or constraint it exists for.</li>
+  <li>Add an owner and an added-on date, so a quarterly prune has something to go on.</li>
+  <li>Search for contradictory pairs (always/never on the same subject) and resolve each one to a single rule.</li>
+  <li>Move subsystem-specific rules into scoped files near that code, rather than loading them on every run.</li>
+  <li>Before deleting a rule, run your eval set with and without it. Rationale tells you which evals to run.</li>
+</ul>
+<pre><code><span class="c"># ci/lint_agent_rules.py — fail the build on rules without recorded rationale</span>
+<span class="k2">import</span> re, sys, pathlib
+
+RULE = re.compile(<span class="s">r"^\s*[-*]\s+(always|never|do not|must|don't)\b"</span>, re.I)
+bad = []
+<span class="k2">for</span> path <span class="k2">in</span> [<span class="s">"CLAUDE.md"</span>, <span class="s">"AGENTS.md"</span>]:
+    lines = pathlib.Path(path).read_text().splitlines() <span class="k2">if</span> pathlib.Path(path).exists() <span class="k2">else</span> []
+    <span class="k2">for</span> i, line <span class="k2">in</span> enumerate(lines):
+        nxt = lines[i + 1] <span class="k2">if</span> i + 1 &lt; len(lines) <span class="k2">else</span> <span class="s">""</span>
+        <span class="k2">if</span> RULE.match(line) <span class="k2">and</span> <span class="s">"why:"</span> <span class="k2">not in</span> line + nxt:
+            bad.append(f<span class="s">"{path}:{i+1}: {line.strip()}"</span>)
+<span class="k2">if</span> bad:
+    sys.exit(<span class="s">"rules missing a why: comment\n"</span> + <span class="s">"\n"</span>.join(bad))</code></pre>
+</section>
+
+<section id="recall">
+<h2><span class="num">09</span>Recall Check</h2>
+<details><summary>Why does an instruction file grow without bound?</summary><p>Adding a rule is O(1). Safely deleting one without knowing its rationale means ruling out regressions across combinations of the remaining rules, which is O(2ⁿ). Nobody pays that cost, so nothing gets deleted.</p></details>
+<details><summary>What did the 288-run ablation find context files improve, and not improve?</summary><p>No measurable correctness gain. Earlier work found real efficiency gains in runtime and tokens. The upshot: cheaper, not more correct.</p></details>
+<details><summary>What single practice did Chakrabarti find removed almost all excess growth?</summary><p>Writing the rule's rationale down as a comment when you add it. The paper reports this removes 99.3% of the excess.</p></details>
+</section>
+
+<section id="today">
+<h2><span class="num">10</span>Do This Today</h2>
+<div class="today"><span class="label">30 minutes</span>Open your largest agent instruction file and pick the ten oldest rules (<code>git blame</code> helps). Next to each, write the reason it exists. Any rule you can't explain in one line is sediment. Open a PR that deletes it and let your eval suite argue back.</div>
+</section>
+
+<section id="sources">
+<h2><span class="num">11</span>Sources</h2>
+<ol class="sources">
+  <li>Kushal Chakrabarti, “Why Does CLAUDE.md Keep Growing? Catastrophic Remembering in Agentic Coding,” arXiv:2608.11095 <span class="d">· Aug 2026</span> · <a href="https://arxiv.org/abs/2608.11095">arxiv.org/abs/2608.11095</a></li>
+  <li>“CLAUDE.md Files Make Coding Agents Cheaper, Not More Correct,” Generative Labs, on Prakhar Khatri's 288-run study <span class="d">· Jul 2026</span> · <a href="https://www.generativelabs.com/insights/claude-md-agents-md-context-files">generativelabs.com</a>; discussion: Daniel Vaughan <span class="d">· 2026-08-06</span> · <a href="https://codex.danielvaughan.com/2026/08/06/do-context-files-help-coding-agents-agents-md-ablation-study-codex-cli-correctness-vs-efficiency/">codex.danielvaughan.com</a></li>
+  <li>“What 466 AGENTS.md files teach about context engineering,” usewire.io, on an MSR 2026 study <span class="d">· 2026</span> · <a href="https://usewire.io/blog/agents-md-466-projects-context-engineering/">usewire.io</a></li>
+  <li>Background: Gloaguen et al., “Evaluating AGENTS.md: Are Repository-Level Context Files Helpful for Coding Agents?,” ETH Zurich, arXiv:2602.11988 <span class="d">· 2026-02-13 (outside window)</span> · <a href="https://arxiv.org/abs/2602.11988">arxiv.org/abs/2602.11988</a></li>
+  <li>Background: Lulla et al., “On the Impact of AGENTS.md Files on the Efficiency of AI Coding Agents,” arXiv:2601.20404 <span class="d">· Jan 2026 (outside window)</span> · <a href="https://arxiv.org/abs/2601.20404">arxiv.org/abs/2601.20404</a></li>
+</ol>
+</section>
+
+<section id="related">
+<h2><span class="num">12</span>Related Reports</h2>
+<div class="related">
+  <a href="context-bleed.html"><span class="t">context bleed</span>Shared context infects every subagent</a>
+  <a href="stop-fixing-tool-syntax.html"><span class="t">upstream context</span>Agents break two layers above the tool call</a>
+  <a href="moat-trap.html"><span class="t">moat trap</span>Your harness is the durable asset, so maintain it</a>
+</div>
+</section>
+</article>
+</main>
+
+<footer class="article-foot">
+  <p><a href="../index.html">← Back to field reports</a></p>
+  <p>Agentic Engineering · orchestration, context, and tool use for agents built to work, not demo.</p>
+</footer>
+<script src="../assets/article.js" defer></script>
+</body>
+</html>

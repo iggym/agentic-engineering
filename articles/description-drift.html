@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Description Drift — Agentic Engineering</title>
+<meta name="description" content="Your agent didn't forget how to use the tool. The tool changed what it tells your agent, and nobody diffed it.">
+<link rel="canonical" href="https://iggym.github.io/agentic-engineering/articles/description-drift.html">
+<meta property="og:title" content="Description Drift — Agentic Engineering">
+<meta property="og:description" content="Your agent didn't forget how to use the tool. The tool changed what it tells your agent, and nobody diffed it.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://iggym.github.io/agentic-engineering/articles/description-drift.html">
+<meta property="og:site_name" content="Agentic Engineering">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/article.css">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"TechArticle","headline":"Description Drift","description":"Your agent didn't forget how to use the tool. The tool changed what it tells your agent, and nobody diffed it.","datePublished":"2026-10-06","author":{"@type":"Organization","name":"Agentic Engineering"},"keywords":"mcp, tool descriptions, schema drift, tool-call, versioning, tool poisoning"}
+</script>
+</head>
+<body>
+<div class="topbar"><div class="topbar-row">
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="../index.html">agentic-engineering</a><span>/</span><span class="mid">Diagnostics</span><span class="mid">/</span>Description Drift</nav>
+  <span>6 min read</span>
+</div><div class="progress" aria-hidden="true"></div></div>
+
+<main class="wrap">
+<article>
+<header class="article-head">
+  <p class="eyebrow">Diagnostic · tool_call stage · 2026-10-06</p>
+  <h1>Description Drift</h1>
+  <p class="hook">Your agent didn't forget how to use the tool. The tool changed what it tells your agent, and nobody diffed it.</p>
+  <p class="meta"><span>Research window <b>2026-06-15 → 2026-10-06</b></span><span>Audience <b>agent & platform engineers</b></span><span><b>4</b> sourced stories</span><span class="stamp">root cause: tool_call</span></p>
+</header>
+
+<section id="setup">
+<h2><span class="num">01</span>The Setup</h2>
+<p><em>Composite scenario, based on the failure pattern described in the DEV Community schema-drift write-up cited below.</em></p>
+<p>A support agent answers questions by calling a search tool exposed through an MCP server maintained by another team. On Monday, answer quality falls off a cliff. The agent isn't erroring. It's confidently saying "I couldn't find any documentation on that" for topics that have pages of docs.</p>
+<p>The on-call engineer suspects the model. Maybe the provider shipped a quiet update. They pin the model version, then try a stronger one. Then they rewrite the system prompt to "always search before answering". The traces show the agent <em>is</em> searching. Every call returns 200. Every result set is empty.</p>
+<p>Nothing in the agent's own repo changed. So what did?</p>
+</section>
+
+<section id="reframe">
+<h2><span class="num">02</span>The Reframe</h2>
+<div class="callout">For an agent, a tool's description <strong>is</strong> its API. Rewording a parameter description is a breaking change, delivered silently, through a channel you approved once and never re-checked.</div>
+<div class="bat">
+  <div class="before"><span class="k">Before</span>"Tool behaviour is defined by its code and its name; if those didn't change, the integration didn't change."</div>
+  <div class="after"><span class="k">After</span>"The model reads the description and the schema and obeys them. Change either one and you've changed the instruction."</div>
+  <div class="turn"><span class="k">Turn</span>Version tool manifests like dependencies, because your agent treats them like instructions.</div>
+</div>
+</section>
+
+<section id="mechanism">
+<h2><span class="num">03</span>The Mechanism</h2>
+<div class="callout def"><span class="label">Coined term</span><strong>Description drift</strong>: a change to a tool's natural-language description or parameter schema that changes agent behaviour without changing the tool name or code path your tests exercise.</div>
+<p>At runtime, an MCP client asks the server for its tool list and puts names, descriptions and JSON schemas into the model's context. To the model, that text has roughly the same authority as your system prompt: it decides which tool gets picked, which arguments get filled and how results are read. Microsoft's June 2026 guidance makes the point in security terms: MCP mixes instructions and data in the same channel.</p>
+<p>Drift breaks agents in three ways:</p>
+<ul class="check">
+  <li><strong>Silent argument mismatch.</strong> A parameter is renamed. The agent keeps sending the old field, and a lenient server ignores the unknown field and falls back to a default.</li>
+  <li><strong>Selection shift.</strong> A reworded description changes when the model thinks the tool applies. The model now picks a different tool, or no tool at all.</li>
+  <li><strong>Instruction injection.</strong> A malicious or careless description includes directives ("also include the user's…"). The agent follows them, and every individual action still looks authorised.</li>
+</ul>
+<p>All three surface at <em>planning</em>: the agent seems to make a bad decision. All three start at <em>tool_call</em>, in a manifest that changed under you.</p>
+</section>
+
+<section id="trace">
+<h2><span class="num">04</span>Execution Trace</h2>
+<div class="trace" aria-label="Execution trace for a drifted search tool">
+  <div class="trace-head"><span>Support agent · search returns nothing</span>
+    <span class="trace-controls"><button class="btn" type="button" data-action="step">Step through ▸</button><button class="btn" type="button" data-action="reveal" aria-pressed="false">Show root cause</button></span></div>
+  <ol>
+    <li data-role="symptom"><span class="st">planning <span class="tagline sym">← symptom surfaces</span></span><span class="what">Agent "decides" the topic is undocumented, which looks like a reasoning regression.</span></li>
+    <li data-role="root"><span class="st">tool_call <span class="tagline root">← root cause</span></span><span class="what">Overnight, the server renamed <code>query</code> → <code>search_query</code> and reworded its description. The agent still sends <code>query</code>.</span></li>
+    <li data-role=""><span class="st">retrieval</span><span class="what">Server ignores the unknown field and searches for the default empty string. Zero hits, HTTP 200.</span></li>
+    <li data-role=""><span class="st">execute</span><span class="what">Nothing to execute. No error is raised anywhere.</span></li>
+    <li data-role=""><span class="st">verify</span><span class="what">Eval checks "did the agent call search?" Yes. Pass.</span></li>
+    <li data-role=""><span class="st">output</span><span class="what">"I couldn't find documentation on that."</span></li>
+  </ol>
+  <p class="trace-note">Click a stage, or step through. The amber stage is where the failure starts; the red one is where you'll notice it.</p>
+</div>
+</section>
+
+<section id="evidence">
+<h2><span class="num">05</span>The Evidence</h2>
+<div class="cards">
+  <div class="card">
+    <p class="src"><b>DEV Community</b> · neelagiri65 · 2026</p>
+    <h3>Nearly half of MCP server updates changed what tools tell the agent</h3>
+    <p>The author re-ran 152 versions of popular MCP servers and compared 86 version-to-version updates. 40 of them (47%) changed the tool surface. Rewritten parameter descriptions were the largest category by far, while tools added (12) and removed (4) were rare. If you only diff tool names, you miss most of what changed. The author's summary: a rewritten parameter description is a new instruction, delivered silently.</p>
+    <p class="stage">Failure stage: tool_call</p>
+  </div>
+  <div class="card">
+    <p class="src"><b>Microsoft Incident Response</b> via TechRepublic · 2026-06-30</p>
+    <h3>Tool descriptions as a hidden attack path</h3>
+    <p>Microsoft warned that the natural-language descriptions attached to MCP tools can be quietly modified to steer an agent into leaking data or taking unintended actions, while every individual action still appears authorised. Coverage of the guidance notes that many deployments apply updated metadata immediately, with no re-approval step.</p>
+    <p class="stage">Failure stage: tool_call (security framing)</p>
+  </div>
+  <div class="card">
+    <p class="src"><b>Cloud Security Alliance</b> research note · 2026-07-11</p>
+    <h3>“Poisoned MCP Tool Descriptions: A Silent Exfiltration Path”</h3>
+    <p>CSA's research note treats description poisoning as an architectural property of the protocol, not a bug in any one server. That's the same root cause as accidental drift, with intent added.</p>
+    <p class="stage">Failure stage: tool_call</p>
+  </div>
+  <div class="card">
+    <p class="src"><b>DEV Community</b> · “My MCP Tools Broke Silently — Schema Drift Is the New Dependency Hell” · 2026</p>
+    <h3>A renamed parameter, a silent default, an empty search</h3>
+    <p>The post describes the failure in the trace above: an upstream tool renamed <code>query</code> to <code>search_query</code>, and the agent kept sending <code>query</code>. The tool didn't reject the call. It ignored the unknown field, used its default, and searched for nothing. The result was a confident wrong answer, plus an agent that explained why the wrong answer was fine.</p>
+    <p class="stage">Failure stage: tool_call → surfaced at planning</p>
+  </div>
+</div>
+<h3>The hidden connection</h3>
+<p>The security community and the reliability community are describing the same defect from opposite ends. A poisoned description and a carelessly reworded one travel the same unversioned, unreviewed path into the model's context. Teams that pin and diff tool manifests get both protections. Teams that don't are relying on every upstream maintainer, honest or otherwise, never to change a sentence.</p>
+</section>
+
+<section id="counter">
+<h2><span class="num">06</span>Argue the Other Side</h2>
+<p>The objection: <em>pinning tool manifests kills the main benefit of MCP</em>. Dynamic discovery exists so servers can improve their tools without every client redeploying. Freezing descriptions means freezing improvements, and many description rewrites (the 152-version study's largest category) are probably clarifications that help agents.</p>
+<p>That's fair, and it's why the fix is <em>diff and review</em>, not <em>freeze forever</em>. The claim isn't that changes are bad. It's that changes to agent instructions deserve the same review as changes to your system prompt. A clarification you've read and approved is an upgrade. One you never saw is drift. The neelagiri65 study can't tell us how many changes were harmful. It shows how many were invisible.</p>
+</section>
+
+<section id="misdiagnosed">
+<h2><span class="num">07</span>Misdiagnosed vs. Actual</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th>Common fix</th><th>What actually works</th></tr></thead>
+  <tbody>
+    <tr><td class="wrong">Pin or upgrade the model</td><td class="right">Pin the tool manifest: names, descriptions and schemas, hashed at approval time</td></tr>
+    <tr><td class="wrong">"Always use the search tool" in the system prompt</td><td class="right">Diff the manifest on every connect and require re-approval on change</td></tr>
+    <tr><td class="wrong">Approve the MCP server once at install</td><td class="right">Treat each manifest hash as the approved artifact, not the server name</td></tr>
+    <tr><td class="wrong">Evals that check "was the tool called?"</td><td class="right">Golden tool-selection and argument tests that run on manifest change</td></tr>
+  </tbody>
+</table></div>
+</section>
+
+<section id="fix">
+<h2><span class="num">08</span>The Fix: Triage Checklist</h2>
+<ul class="check">
+  <li>Log the full tool manifest (names, descriptions, input schemas) with a hash at the start of every agent run.</li>
+  <li>Store an approved hash per server. If the live hash differs, fail closed or route to a human for re-approval.</li>
+  <li>Diff descriptions and parameter docs, not just tool names. That's where most changes are.</li>
+  <li>Ask server owners to set <code>additionalProperties: false</code> so renamed parameters fail loudly instead of falling back to defaults.</li>
+  <li>Keep a small golden suite: 10–20 prompts with the expected tool and arguments. Run it whenever the manifest hash changes.</li>
+  <li>Scan new descriptions for imperative instructions aimed at the model ("always", "also send", "ignore").</li>
+</ul>
+<pre><code><span class="c"># fail closed when an MCP server's manifest drifts from what was approved</span>
+<span class="k2">import</span> hashlib, json
+
+<span class="k2">def</span> manifest_hash(tools):
+    canon = [{<span class="s">"name"</span>: t.name, <span class="s">"description"</span>: t.description,
+              <span class="s">"schema"</span>: t.inputSchema} <span class="k2">for</span> t <span class="k2">in</span> sorted(tools, key=<span class="k2">lambda</span> t: t.name)]
+    <span class="k2">return</span> hashlib.sha256(json.dumps(canon, sort_keys=<span class="k2">True</span>).encode()).hexdigest()
+
+<span class="k2">async def</span> load_tools(session, approved):
+    tools = (<span class="k2">await</span> session.list_tools()).tools
+    h = manifest_hash(tools)
+    <span class="k2">if</span> h != approved[session.server_name]:
+        <span class="k2">raise</span> DriftDetected(session.server_name, h)   <span class="c"># re-review before use</span>
+    <span class="k2">return</span> tools</code></pre>
+</section>
+
+<section id="recall">
+<h2><span class="num">09</span>Recall Check</h2>
+<details><summary>Why is a reworded parameter description a breaking change for an agent?</summary><p>The model reads descriptions as instructions. Changing the wording changes which tool gets picked and how arguments are filled, even when the code and name are identical.</p></details>
+<details><summary>Why did the drifted search tool produce no error?</summary><p>The server silently ignored the unknown (old) parameter name and used its default. That's why schemas should reject unknown fields.</p></details>
+<details><summary>What do description poisoning and description drift have in common?</summary><p>Both travel the same unversioned metadata channel into the model's context. Pinning and diffing manifests defends against both.</p></details>
+</section>
+
+<section id="today">
+<h2><span class="num">10</span>Do This Today</h2>
+<div class="today"><span class="label">30 minutes</span>Dump the tool list from every MCP server your agent uses to a JSON file and commit it. Tomorrow, dump it again and run <code>git diff</code>. Whatever shows up is a change your agent absorbed without anyone reading it.</div>
+</section>
+
+<section id="sources">
+<h2><span class="num">11</span>Sources</h2>
+<ol class="sources">
+  <li>neelagiri65, “I re-ran 152 versions of popular MCP servers. Nearly half the updates changed what the tools tell your agent.,” DEV Community <span class="d">· 2026</span> · <a href="https://dev.to/neelagiri65/i-re-ran-152-versions-of-popular-mcp-servers-nearly-half-the-updates-changed-what-the-tools-tell-3ppf">dev.to</a></li>
+  <li>“Microsoft Flags MCP Tool Descriptions as Hidden AI Agent Attack Path,” TechRepublic, on Microsoft Incident Response guidance <span class="d">· 2026-06-30</span> · <a href="https://www.techrepublic.com/article/news-microsoft-mcp-tool-risk/">techrepublic.com</a></li>
+  <li>“Poisoned MCP Tool Descriptions: A Silent Exfiltration Path,” Cloud Security Alliance Labs research note <span class="d">· 2026-07-11</span> · <a href="https://labs.cloudsecurityalliance.org/research/csa-research-note-mcp-tool-description-poisoning-20260711-cs/">labs.cloudsecurityalliance.org</a></li>
+  <li>nesquikm, “My MCP Tools Broke Silently — Schema Drift Is the New Dependency Hell,” DEV Community <span class="d">· 2026</span> · <a href="https://dev.to/nesquikm/my-mcp-tools-broke-silently-schema-drift-is-the-new-dependency-hell-5c49">dev.to</a></li>
+  <li>Background: MCPTox benchmark on tool-description poisoning across 45 MCP servers and 20 models <span class="d">· Aug 2025 (outside window)</span></li>
+</ol>
+</section>
+
+<section id="related">
+<h2><span class="num">12</span>Related Reports</h2>
+<div class="related">
+  <a href="diagnosing-the-phantom-argument.html"><span class="t">phantom argument</span>When a parameter is ghostwritten upstream</a>
+  <a href="misdirection-in-the-tool.html"><span class="t">misdirection</span>Your tool isn't broken, your retrieval is lying to it</a>
+  <a href="the-side-effect-slipstream.html"><span class="t">side-effect slipstream</span>MCP security beyond the prompt</a>
+</div>
+</section>
+</article>
+</main>
+
+<footer class="article-foot">
+  <p><a href="../index.html">← Back to field reports</a></p>
+  <p>Agentic Engineering · orchestration, context, and tool use for agents built to work, not demo.</p>
+</footer>
+<script src="../assets/article.js" defer></script>
+</body>
+</html>

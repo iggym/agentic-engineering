@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Six-Stage Autopsy — Agentic Engineering</title>
+<meta name="description" content="Start here. Agent failures show up in one stage and start in another; this is the method every field report on this site uses to tell them apart.">
+<link rel="canonical" href="https://iggym.github.io/agentic-engineering/articles/the-six-stage-autopsy.html">
+<meta property="og:title" content="The Six-Stage Autopsy — Agentic Engineering">
+<meta property="og:description" content="Start here. Agent failures show up in one stage and start in another; this is the method every field report on this site uses.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://iggym.github.io/agentic-engineering/articles/the-six-stage-autopsy.html">
+<meta property="og:site_name" content="Agentic Engineering">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/article.css">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"TechArticle","headline":"The Six-Stage Autopsy","description":"Agent failures show up in one stage and start in another; this is the method every field report on this site uses to tell them apart.","datePublished":"2026-10-06","author":{"@type":"Organization","name":"Agentic Engineering"},"keywords":"agent debugging, failure attribution, root cause analysis, agent harness, methodology"}
+</script>
+</head>
+<body>
+<div class="topbar"><div class="topbar-row">
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="../index.html">agentic-engineering</a><span>/</span><span class="mid">Start here</span><span class="mid">/</span>The Six-Stage Autopsy</nav>
+  <span>7 min read</span>
+</div><div class="progress" aria-hidden="true"></div></div>
+
+<main class="wrap">
+<article>
+<header class="article-head">
+  <p class="eyebrow">Start here · method · 2026-10-06</p>
+  <h1>The Six-Stage Autopsy</h1>
+  <p class="hook">Agent failures show up in one stage and start in another. This is the method every field report on this site uses to tell the two apart.</p>
+  <p class="meta"><span>Research window <b>2026-07-01 → 2026-10-06</b></span><span>Audience <b>anyone debugging agents</b></span><span><b>1</b> sourced study + 22 field reports</span><span class="stamp">entry point</span></p>
+</header>
+
+<section id="setup">
+<h2><span class="num">01</span>The Setup</h2>
+<p>Every agent postmortem starts with a symptom: a wrong answer, a duplicate charge, an empty search, a test that never existed. The symptom has a location, the place in the run where someone finally noticed. Teams fix that location. They add a prompt rule, a retry, a stronger model. The bug comes back wearing different clothes.</p>
+<p>The reports on this site all make the same move: <strong>separate where a failure surfaced from where it started</strong>, and fix the second one. This page explains the tool used to do that, so you can run it on your own traces.</p>
+</section>
+
+<section id="reframe">
+<h2><span class="num">02</span>The Reframe</h2>
+<div class="callout">"Which stage failed?" is the wrong question, because the stage that failed visibly is usually innocent. Ask instead: <strong>at which stage did the run first become wrong, and what component owns that stage?</strong></div>
+<div class="bat">
+  <div class="before"><span class="k">Before</span>"The agent gave a bad answer, so the model reasoned badly."</div>
+  <div class="after"><span class="k">After</span>"The answer was the last stage to hold a bad state that entered three stages earlier."</div>
+  <div class="turn"><span class="k">Turn</span>Debug the first wrong stage, not the last visible one.</div>
+</div>
+</section>
+
+<section id="mechanism">
+<h2><span class="num">03</span>The Six Stages</h2>
+<div class="callout def"><span class="label">Coined term</span><strong>Six-stage autopsy</strong>: walking a failed agent run through planning, tool_call, retrieval, execute, verify and output, and marking the first stage whose state was already wrong (the root) separately from the stage where the failure was noticed (the symptom).</div>
+<div class="table-wrap"><table>
+  <thead><tr><th>Stage</th><th>What it owns</th><th>Typical root-cause question</th></tr></thead>
+  <tbody>
+    <tr><td><b>planning</b></td><td>Decomposition, task graphs, delegation, constraints carried from the request</td><td>Was the plan binding, and did it carry every hard constraint?</td></tr>
+    <tr><td><b>tool_call</b></td><td>Tool selection, argument binding, tool manifests and schemas</td><td>Did the tool contract the model saw match the one that ran?</td></tr>
+    <tr><td><b>retrieval</b></td><td>Context assembly: memory, RAG, instruction files, results passed between agents</td><td>What was in context, where did it come from, and was it still true?</td></tr>
+    <tr><td><b>execute</b></td><td>Side effects, state commits, retries, resume, sandboxing: the harness</td><td>Did each external effect happen exactly as many times as intended?</td></tr>
+    <tr><td><b>verify</b></td><td>Evals, guardrails, tests, review</td><td>Did the check look at the layer where this failure lives?</td></tr>
+    <tr><td><b>output</b></td><td>Final delivery, summaries, handoffs to humans or other agents</td><td>Does the handoff describe what actually happened?</td></tr>
+  </tbody>
+</table></div>
+</section>
+
+<section id="trace">
+<h2><span class="num">04</span>Execution Trace: How to Read One</h2>
+<div class="trace" aria-label="How to walk a trace through the six stages">
+  <div class="trace-head"><span>Autopsy procedure · any failed run</span>
+    <span class="trace-controls"><button class="btn" type="button" data-action="step">Step through ▸</button><button class="btn" type="button" data-action="reveal" aria-pressed="false">Show root cause</button></span></div>
+  <ol>
+    <li data-role="root"><span class="st">planning <span class="tagline root">← first wrong state?</span></span><span class="what">Write down the state the run <em>should</em> have at the end of this stage. Compare it with the trace. If they already differ, stop: this is your root.</span></li>
+    <li data-role=""><span class="st">tool_call</span><span class="what">Same check: the expected tool, arguments and manifest against what was actually sent.</span></li>
+    <li data-role=""><span class="st">retrieval</span><span class="what">Expected context against actual context. Diff the prompt, not the summary of it.</span></li>
+    <li data-role=""><span class="st">execute</span><span class="what">Expected external effects against actual ones, counted at the boundary, not from the agent's log.</span></li>
+    <li data-role=""><span class="st">verify</span><span class="what">Which layer did the check inspect? Was this failure visible from there?</span></li>
+    <li data-role="symptom"><span class="st">output <span class="tagline sym">← usually where you start</span></span><span class="what">The symptom. Record it, then walk back up from the top rather than down from here.</span></li>
+  </ol>
+  <p class="trace-note">Walk top-down. The first stage whose actual state diverges from the expected state is the root; everything after it is propagation.</p>
+</div>
+</section>
+
+<section id="evidence">
+<h2><span class="num">05</span>The Evidence</h2>
+<div class="cards">
+  <div class="card">
+    <p class="src"><b>arXiv 2607.28802</b> · 2026-07-30</p>
+    <h3>“Model or Harness? An Interaction-Centric Taxonomy for Localizing Agent Failures”</h3>
+    <p>The authors argue that existing evaluations collapse agent failures into system-level outcomes, which hides where a fault started and which intervention would help. The same visible failure might need model post-training, harness engineering, environment redesign or benchmark repair. Their taxonomy organises 41 failure modes drawn from public benchmarks, system cards and agent logs. It localises each failure to the interaction where it originates and assigns a fault side (model, harness, environment or grader). Independent judges recovered human labels with Cohen's κ = 0.76.</p>
+    <p class="stage">Same principle: localise origin, not outcome</p>
+  </div>
+</div>
+<h3>The hidden connection</h3>
+<p>The six stages are a working engineer's version of the same idea. They're coarser than a 41-mode taxonomy, but small enough to hold in your head during an incident. Every report below applies it to one recurring failure and names the pattern so you can recognise it next time.</p>
+</section>
+
+<section id="counter">
+<h2><span class="num">06</span>Argue the Other Side</h2>
+<p>Real failures often have more than one cause. A stale index (retrieval) <em>and</em> a lenient schema (tool_call) <em>and</em> a shallow eval (verify) can all be necessary for a bad outcome. Picking one "root" can hide the others, and stages blur in practice: is a retry policy part of tool_call or execute?</p>
+<p>Both are true. The autopsy doesn't claim there's one cause. It claims there's one <em>first</em> divergence, and that fixing it usually removes the most downstream symptoms per line of code. Note the other contributing stages too. A useful rule: fix the root, and add a check at the verify stage that would have caught it.</p>
+</section>
+
+<section id="misdiagnosed">
+<h2><span class="num">07</span>Field Reports by Root-Cause Stage</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th>Root stage</th><th>Reports</th></tr></thead>
+  <tbody>
+    <tr><td><b>planning</b></td><td><a href="the-paper-plan.html">The Paper Plan</a></td></tr>
+    <tr><td><b>tool_call</b></td><td><a href="description-drift.html">Description Drift</a> · <a href="phantom-inheritance-subagents-remember.html">Phantom Inheritance</a></td></tr>
+    <tr><td><b>retrieval</b></td><td><a href="instruction-sediment.html">Instruction Sediment</a> · <a href="context-bleed.html">Context Bleed</a> · <a href="catching-fire.html">Catching Fire</a> · <a href="misdirection-in-the-tool.html">Misdirection in the Tool</a> · <a href="diagnosing-the-phantom-argument.html">The Phantom Argument</a> · <a href="stop-fixing-tool-syntax.html">Stop Fixing Tool Syntax</a> · <a href="when-one-subagents-memory-becomes-everyones-problem.html">When One Subagent's Memory…</a></td></tr>
+    <tr><td><b>execute</b></td><td><a href="the-retry-echo.html">The Retry Echo</a> · <a href="never-committed.html">Never Committed</a> · <a href="divide-and-debug.html">Divide and Debug</a> · <a href="the-harness-mirage.html">The Harness Mirage</a> · <a href="the-side-effect-slipstream.html">The Side-Effect Slipstream</a> · <a href="moat-trap.html">Moat Trap</a></td></tr>
+    <tr><td><b>verify</b></td><td><a href="verify-gap.html">The Verify Gap</a> · <a href="verify-theater.html">Verify Theater</a> · <a href="diagnosing-verify-amnesia.html">Verify Amnesia</a> · <a href="green-light-lie-eval-failure.html">The Green-Light Lie</a> · <a href="final-answer-trap.html">The Final Answer Trap</a></td></tr>
+    <tr><td><b>output</b></td><td><a href="handoff-fiction.html">Handoff Fiction</a></td></tr>
+  </tbody>
+</table></div>
+</section>
+
+<section id="fix">
+<h2><span class="num">08</span>Autopsy Checklist</h2>
+<ul class="check">
+  <li>Capture the full trace: prompts as sent, tool manifests, tool arguments and results, external effects, check results.</li>
+  <li>Write the expected end-state for each of the six stages <em>before</em> reading the trace, so the symptom doesn't anchor you.</li>
+  <li>Walk top-down and mark the first divergence as root. Mark where it was noticed as symptom.</li>
+  <li>Name the owning component (model, harness, tool contract, data, check) and fix it there.</li>
+  <li>Add a verify-stage check that would have caught this root, so the next one fails loudly.</li>
+  <li>Record <code>root_cause_stage</code> and <code>symptom_stage</code> in your incident log. Patterns show up within weeks.</li>
+</ul>
+<pre><code><span class="c"># a minimal autopsy record — one per incident</span>
+{
+  <span class="s">"incident"</span>: <span class="s">"2026-10-02-duplicate-renewal"</span>,
+  <span class="s">"symptom_stage"</span>: <span class="s">"output"</span>,
+  <span class="s">"root_cause_stage"</span>: <span class="s">"execute"</span>,
+  <span class="s">"owner"</span>: <span class="s">"tool-contract"</span>,          <span class="c">// model | harness | tool-contract | data | check</span>
+  <span class="s">"first_divergence"</span>: <span class="s">"charge executed twice after client timeout"</span>,
+  <span class="s">"new_check"</span>: <span class="s">"count external charges per run_id == 1"</span>
+}</code></pre>
+</section>
+
+<section id="recall">
+<h2><span class="num">09</span>Recall Check</h2>
+<details><summary>What's the difference between the root stage and the symptom stage?</summary><p>The root is the first stage whose state was already wrong. The symptom stage is where someone noticed. Fixing the symptom stage usually just moves the failure.</p></details>
+<details><summary>Why walk the trace top-down instead of from the symptom backwards?</summary><p>Starting from the symptom anchors you on the visible stage. Comparing expected and actual state from planning onwards finds the first divergence directly.</p></details>
+<details><summary>What four fault sides does the 2607.28802 taxonomy assign?</summary><p>Model, harness, environment and grader.</p></details>
+</section>
+
+<section id="today">
+<h2><span class="num">10</span>Do This Today</h2>
+<div class="today"><span class="label">30 minutes</span>Take your most recent agent incident and fill in the autopsy record above. If the root stage you find differs from the component you changed in the fix, reopen the incident. Then pick the report below that matches your root stage.</div>
+</section>
+
+<section id="sources">
+<h2><span class="num">11</span>Sources</h2>
+<ol class="sources">
+  <li>“Model or Harness? An Interaction-Centric Taxonomy for Localizing Agent Failures,” arXiv:2607.28802 <span class="d">· 2026-07-30</span> · <a href="https://arxiv.org/abs/2607.28802">arxiv.org/abs/2607.28802</a></li>
+  <li>The field reports linked in section 07, each with its own sources.</li>
+</ol>
+</section>
+
+<section id="related">
+<h2><span class="num">12</span>Start With These</h2>
+<div class="related">
+  <a href="the-retry-echo.html"><span class="t">execute</span>The Retry Echo</a>
+  <a href="description-drift.html"><span class="t">tool_call</span>Description Drift</a>
+  <a href="verify-gap.html"><span class="t">verify</span>The Verify Gap</a>
+</div>
+</section>
+</article>
+</main>
+
+<footer class="article-foot">
+  <p><a href="../index.html">← Back to field reports</a></p>
+  <p>Agentic Engineering · orchestration, context, and tool use for agents built to work, not demo.</p>
+</footer>
+<script src="../assets/article.js" defer></script>
+</body>
+</html>

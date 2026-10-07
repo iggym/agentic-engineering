@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Agentic Engineering</title>
+  <subtitle>Orchestration, context, and tool use for agents built to work, not demo.</subtitle>
+  <link href="https://iggym.github.io/agentic-engineering/"/>
+  <link rel="self" href="https://iggym.github.io/agentic-engineering/feed.xml"/>
+  <id>https://iggym.github.io/agentic-engineering/</id>
+  <updated>2026-10-06T00:00:00Z</updated>
+  <author><name>Agentic Engineering</name></author>
+  <entry>
+    <title>The Retry Echo</title>
+    <link href="https://iggym.github.io/agentic-engineering/articles/the-retry-echo.html"/>
+    <id>https://iggym.github.io/agentic-engineering/articles/the-retry-echo.html</id>
+    <updated>2026-10-06T00:00:00Z</updated>
+    <summary>Your agent didn&#x27;t double-charge the customer because it reasoned badly. It retried a write it had no way to observe.</summary>
+    <category term="idempotency"/>
+    <category term="retries"/>
+    <category term="execute"/>
+    <category term="tool-contracts"/>
+  </entry>
+  <entry>
+    <title>Description Drift</title>
+    <link href="https://iggym.github.io/agentic-engineering/articles/description-drift.html"/>
+    <id>https://iggym.github.io/agentic-engineering/articles/description-drift.html</id>
+    <updated>2026-10-06T00:00:00Z</updated>
+    <summary>Your agent didn&#x27;t forget how to use the tool. The tool changed what it tells your agent, and nobody diffed it.</summary>
+    <category term="mcp"/>
+    <category term="tool-call"/>
+    <category term="schema-drift"/>
+    <category term="tool-poisoning"/>
+  </entry>
+  <entry>
+    <title>Instruction Sediment</title>
+    <link href="https://iggym.github.io/agentic-engineering/articles/instruction-sediment.html"/>
+    <id>https://iggym.github.io/agentic-engineering/articles/instruction-sediment.html</id>
+    <updated>2026-10-06T00:00:00Z</updated>
+    <summary>Your agent isn&#x27;t ignoring your rules. It&#x27;s obeying all of them, including the ones whose reason left the team months ago.</summary>
+    <category term="context-files"/>
+    <category term="memory"/>
+    <category term="retrieval"/>
+    <category term="claude-md"/>
+  </entry>
+  <entry>
+    <title>The Paper Plan</title>
+    <link href="https://iggym.github.io/agentic-engineering/articles/the-paper-plan.html"/>
+    <id>https://iggym.github.io/agentic-engineering/articles/the-paper-plan.html</id>
+    <updated>2026-10-06T00:00:00Z</updated>
+    <summary>Your agent&#x27;s plan looked right because nothing ever held execution to it. The plan is a document; the trajectory is what ran.</summary>
+    <category term="planning"/>
+    <category term="plan-and-execute"/>
+    <category term="orchestration"/>
+    <category term="trajectory"/>
+  </entry>
+  <entry>
+    <title>Handoff Fiction</title>
+    <link href="https://iggym.github.io/agentic-engineering/articles/handoff-fiction.html"/>
+    <id>https://iggym.github.io/agentic-engineering/articles/handoff-fiction.html</id>
+    <updated>2026-10-06T00:00:00Z</updated>
+    <summary>Your reviewers didn&#x27;t miss the bug. They reviewed the agent&#x27;s description of the change, and the description was fiction.</summary>
+    <category term="code-review"/>
+    <category term="pull-requests"/>
+    <category term="output"/>
+    <category term="human-in-the-loop"/>
+  </entry>
+  <entry>
+    <title>Misdirection in the Tool</title>
+    <link href="https://iggym.github.io/agentic-engineering/articles/misdirection-in-the-tool.html"/>
+    <id>https://iggym.github.io/agentic-engineering/articles/misdirection-in-the-tool.html</id>
+    <updated>2026-08-13T00:00:00Z</updated>
+    <summary>Your tool isn&#x27;t broken — your retrieval is lying to it.</summary>
+    <category term="orchestration"/>
+    <category term="tool-use"/>
+    <category term="retrieval"/>
+  </entry>
+  <entry>
+    <title>Diagnosing Verify Amnesia</title>
+    <link href="https://iggym.github.io/agentic-engineering/articles/diagnosing-verify-amnesia.html"/>
+    <id>https://iggym.github.io/agentic-engineering/articles/diagnosing-verify-amnesia.html</id>
+    <updated>2026-05-15T00:00:00Z</updated>
+    <summary>The failure didn&#x27;t originate at the tool call; it originated at the Verify stage, which evaluated the 4,800th attempt in a vacuum.</summary>
+    <category term="orchestration"/>
+    <category term="verify-gap"/>
+    <category term="tool-use"/>
+    <category term="cost-economics"/>
+  </entry>
+  <entry>
+    <title>Divide And Debug</title>
+    <link href="https://iggym.github.io/agentic-engineering/articles/divide-and-debug.html"/>
+    <id>https://iggym.github.io/agentic-engineering/articles/divide-and-debug.html</id>
+    <updated>2026-04-30T00:00:00Z</updated>
+    <summary>Multi-agent orchestration isn&#x27;t a capability upgrade; it is a debugging upgrade wearing a performance costume.</summary>
+    <category term="orchestration"/>
+    <category term="multi-agent"/>
+    <category term="harness-design"/>
+    <category term="supervisor-worker"/>
+    <category term="debugging"/>
+  </entry>
+  <entry>
+    <title>The Harness Mirage: Why Your Agent Infrastructure Is Lying to You</title>
+    <link href="https://iggym.github.io/agentic-engineering/articles/the-harness-mirage.html"/>
+    <id>https://iggym.github.io/agentic-engineering/articles/the-harness-mirage.html</id>
+    <updated>2026-04-16T00:00:00Z</updated>
+    <summary>Most agent failures aren&#x27;t model reasoning errors—they&#x27;re the harness mirage: unconstrained execution loops passing dirty state through shallow verification gates.</summary>
+    <category term="harness-design"/>
+    <category term="verify-gap"/>
+    <category term="agent-architecture"/>
+    <category term="orchestration"/>
+  </entry>
+  <entry>
+    <title>Stop Fixing Tool Syntax</title>
+    <link href="https://iggym.github.io/agentic-engineering/articles/stop-fixing-tool-syntax.html"/>
+    <id>https://iggym.github.io/agentic-engineering/articles/stop-fixing-tool-syntax.html</id>
+    <updated>2026-03-18T00:00:00Z</updated>
+    <summary>Your agent rarely breaks at tool execution; it breaks two layers upstream when context truncation feeds it half a truth.</summary>
+    <category term="tool-use"/>
+    <category term="context-truncation"/>
+    <category term="retrieval"/>
+    <category term="debugging"/>
+  </entry>
+  <entry>
+    <title>Phantom Inheritance: When Your Subagents Remember What You Told Them To Forget</title>
+    <link href="https://iggym.github.io/agentic-engineering/articles/phantom-inheritance-subagents-remember.html"/>
+    <id>https://iggym.github.io/agentic-engineering/articles/phantom-inheritance-subagents-remember.html</id>
+    <updated>2026-03-14T00:00:00Z</updated>
+    <summary>Isolation isn&#x27;t about what you don&#x27;t pass in the prompt — it&#x27;s about what your runtime smuggles back in the tool results.</summary>
+    <category term="context-isolation"/>
+    <category term="verify-gap"/>
+    <category term="tool-result-channel"/>
+    <category term="mcp-leak"/>
+  </entry>
+  <entry>
+    <title>When One Subagent&#x27;s Memory Becomes Everyone&#x27;s Problem</title>
+    <link href="https://iggym.github.io/agentic-engineering/articles/when-one-subagents-memory-becomes-everyones-problem.html"/>
+    <id>https://iggym.github.io/agentic-engineering/articles/when-one-subagents-memory-becomes-everyones-problem.html</id>
+    <updated>2026-03-12T00:00:00Z</updated>
+    <summary>Isolation doesn&#x27;t make agents smarter. It stops one bad memory from becoming a system-wide lie.</summary>
+    <category term="context-isolation"/>
+    <category term="orchestration"/>
+    <category term="tool-use-failure"/>
+    <category term="security"/>
+  </entry>
+  <entry>
+    <title>The Side-Effect Slipstream: Where Agent Runtime Risk Actually Lives</title>
+    <link href="https://iggym.github.io/agentic-engineering/articles/the-side-effect-slipstream.html"/>
+    <id>https://iggym.github.io/agentic-engineering/articles/the-side-effect-slipstream.html</id>
+    <updated>2026-02-19T00:00:00Z</updated>
+    <summary>Stop red-teaming prompts while ignoring unisolated runtimes. Most agent exploits leverage the side-effect slipstream: unmonitored state mutations passing through surface-level tool verification.</summary>
+    <category term="agent-security"/>
+    <category term="execution-sandboxing"/>
+    <category term="mcp-security"/>
+    <category term="verify-gap"/>
+  </entry>
+  <entry>
+    <title>The Verify Gap</title>
+    <link href="https://iggym.github.io/agentic-engineering/articles/verify-gap.html"/>
+    <id>https://iggym.github.io/agentic-engineering/articles/verify-gap.html</id>
+    <updated>2026-02-13T00:00:00Z</updated>
+    <summary>The check that should catch the failure usually runs – but it looks at the wrong layer.</summary>
+    <category term="verify-gap"/>
+    <category term="retrieval"/>
+    <category term="eval"/>
+    <category term="trajectory"/>
+  </entry>
+  <entry>
+    <title>Context Bleed</title>
+    <link href="https://iggym.github.io/agentic-engineering/articles/context-bleed.html"/>
+    <id>https://iggym.github.io/agentic-engineering/articles/context-bleed.html</id>
+    <updated>2026-02-13T00:00:00Z</updated>
+    <summary>Your context isn&#x27;t isolated — it&#x27;s a shared wound that infects every subagent.</summary>
+    <category term="context-bleed"/>
+    <category term="isolation"/>
+    <category term="memory"/>
+    <category term="retrieval"/>
+  </entry>
+  <entry>
+    <title>Moat Trap</title>
+    <link href="https://iggym.github.io/agentic-engineering/articles/moat-trap.html"/>
+    <id>https://iggym.github.io/agentic-engineering/articles/moat-trap.html</id>
+    <updated>2026-02-13T00:00:00Z</updated>
+    <summary>The model is a commodity — your harness is the only durable asset.</summary>
+    <category term="moat-trap"/>
+    <category term="harness"/>
+    <category term="commoditization"/>
+    <category term="planning"/>
+  </entry>
+  <entry>
+    <title>Verify Theater</title>
+    <link href="https://iggym.github.io/agentic-engineering/articles/verify-theater.html"/>
+    <id>https://iggym.github.io/agentic-engineering/articles/verify-theater.html</id>
+    <updated>2026-02-13T00:00:00Z</updated>
+    <summary>Your evals pass, your agents fail — because you&#x27;re checking answers, not trajectories.</summary>
+    <category term="verify-theater"/>
+    <category term="evaluation"/>
+    <category term="trajectory"/>
+    <category term="verify"/>
+  </entry>
+  <entry>
+    <title>Diagnosing the Phantom Argument</title>
+    <link href="https://iggym.github.io/agentic-engineering/articles/diagnosing-the-phantom-argument.html"/>
+    <id>https://iggym.github.io/agentic-engineering/articles/diagnosing-the-phantom-argument.html</id>
+    <updated>2026-02-12T00:00:00Z</updated>
+    <summary>Your tool call didn&#x27;t fail because the model is dumb. It failed because of a Phantom Argument—a parameter ghostwritten by a 3-day-old RAG index.</summary>
+    <category term="tool-use"/>
+    <category term="retrieval"/>
+    <category term="debugging"/>
+    <category term="root-cause"/>
+  </entry>
+  <entry>
+    <title>The Green-Light Lie: Your Agent Passed Eval and Failed the Job</title>
+    <link href="https://iggym.github.io/agentic-engineering/articles/green-light-lie-eval-failure.html"/>
+    <id>https://iggym.github.io/agentic-engineering/articles/green-light-lie-eval-failure.html</id>
+    <updated>2026-02-10T00:00:00Z</updated>
+    <summary>We grade agents like chatbots — final answer correct — while trajectory failures, harness variance, and flawed verifiers make leaderboards lie.</summary>
+    <category term="evaluation"/>
+    <category term="verify-gap"/>
+    <category term="trajectory-eval"/>
+    <category term="swe-bench"/>
+  </entry>
+  <entry>
+    <title>Never Committed</title>
+    <link href="https://iggym.github.io/agentic-engineering/articles/never-committed.html"/>
+    <id>https://iggym.github.io/agentic-engineering/articles/never-committed.html</id>
+    <updated>2025-04-15T00:00:00Z</updated>
+    <summary>Your agent didn&#x27;t run out of context. Your state layer never committed.</summary>
+    <category term="state-management"/>
+    <category term="debugging"/>
+    <category term="langgraph"/>
+    <category term="memory"/>
+    <category term="diagnostic"/>
+  </entry>
+  <entry>
+    <title>Catching Fire</title>
+    <link href="https://iggym.github.io/agentic-engineering/articles/catching-fire.html"/>
+    <id>https://iggym.github.io/agentic-engineering/articles/catching-fire.html</id>
+    <updated>2025-03-14T00:00:00Z</updated>
+    <summary>Your shared-context architecture isn&#x27;t making your agents collaborative — it&#x27;s making them contagious.</summary>
+    <category term="context-isolation"/>
+    <category term="multi-agent"/>
+    <category term="retrieval"/>
+    <category term="orchestration"/>
+  </entry>
+  <entry>
+    <title>The Final Answer Trap</title>
+    <link href="https://iggym.github.io/agentic-engineering/articles/final-answer-trap.html"/>
+    <id>https://iggym.github.io/agentic-engineering/articles/final-answer-trap.html</id>
+    <updated>2024-04-25T00:00:00Z</updated>
+    <summary>A passing final answer is the worst possible signal of agent capability.</summary>
+    <category term="evaluation"/>
+    <category term="trajectory-eval"/>
+    <category term="agents"/>
+  </entry>
+</feed>

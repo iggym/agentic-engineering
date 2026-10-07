@@ -9,7 +9,7 @@
   },
   "articles": [
     {
-      "id": "state-commit-001",
+      "id": "0053",
       "slug": "never-committed",
       "title": "Never Committed",
       "hook": "Your agent didn't run out of context. Your state layer never committed.",
@@ -17,13 +17,32 @@
       "date": "2025-04-15",
       "status": "published",
       "type": "diagnostic",
-      "tags": ["state-management", "debugging", "langgraph", "memory", "diagnostic"],
+      "tags": [
+        "state-management",
+        "debugging",
+        "langgraph",
+        "memory",
+        "diagnostic"
+      ],
       "reading_time_minutes": 5,
       "pinned": false,
-      "research_window": ["2025-03-11", "2025-04-15"]
+      "research_window": [
+        "2025-03-11",
+        "2025-04-15"
+      ],
+      "trace_stages": [
+        "planning",
+        "tool_call",
+        "retrieval",
+        "execute",
+        "verify",
+        "output"
+      ],
+      "root_cause_stage": "execute",
+      "symptom_stage": "output"
     },
     {
-      "id": "orch-layer-001",
+      "id": "0054",
       "slug": "divide-and-debug",
       "title": "Divide And Debug",
       "hook": "Multi-agent orchestration isn't a capability upgrade; it is a debugging upgrade wearing a performance costume.",
@@ -31,10 +50,29 @@
       "date": "2026-04-30",
       "status": "published",
       "type": "diagnostic",
-      "tags": ["orchestration", "multi-agent", "harness-design", "supervisor-worker", "debugging"],
+      "tags": [
+        "orchestration",
+        "multi-agent",
+        "harness-design",
+        "supervisor-worker",
+        "debugging"
+      ],
       "reading_time_minutes": 6,
       "pinned": false,
-      "research_window": ["2026-03-26", "2026-04-30"]
+      "research_window": [
+        "2026-03-26",
+        "2026-04-30"
+      ],
+      "trace_stages": [
+        "planning",
+        "tool_call",
+        "retrieval",
+        "execute",
+        "verify",
+        "output"
+      ],
+      "root_cause_stage": "execute",
+      "symptom_stage": "output"
     },
     {
       "id": "1847",
@@ -45,24 +83,59 @@
       "date": "2026-03-12",
       "status": "published",
       "type": "diagnostic",
-      "tags": ["context-isolation", "orchestration", "tool-use-failure", "security"],
+      "tags": [
+        "context-isolation",
+        "orchestration",
+        "tool-use-failure",
+        "security"
+      ],
       "reading_time_minutes": 8,
       "pinned": false,
-      "research_window": "Jan 29, 2026 through Mar 12, 2026"
+      "research_window": [
+        "2026-01-29",
+        "2026-03-12"
+      ],
+      "trace_stages": [
+        "planning",
+        "tool_call",
+        "retrieval",
+        "execute",
+        "verify",
+        "output"
+      ],
+      "root_cause_stage": "retrieval",
+      "symptom_stage": "output"
     },
     {
       "id": "0826",
       "slug": "misdirection-in-the-tool",
-      "title": "Misdirection in the tool",
+      "title": "Misdirection in the Tool",
       "hook": "Your tool isn't broken — your retrieval is lying to it.",
       "path": "articles/misdirection-in-the-tool.html",
       "date": "2026-08-13",
       "status": "published",
       "type": "diagnostic",
-      "tags": ["orchestration", "tool-use", "retrieval"],
+      "tags": [
+        "orchestration",
+        "tool-use",
+        "retrieval"
+      ],
       "reading_time_minutes": 6,
       "pinned": false,
-      "research_window": "2026-06-15 to 2026-08-13"
+      "research_window": [
+        "2026-06-15",
+        "2026-08-13"
+      ],
+      "trace_stages": [
+        "planning",
+        "tool_call",
+        "retrieval",
+        "execute",
+        "verify",
+        "output"
+      ],
+      "root_cause_stage": "retrieval",
+      "symptom_stage": "tool_call"
     },
     {
       "id": "0425",
@@ -73,26 +146,60 @@
       "date": "2024-04-25",
       "status": "published",
       "type": "diagnostic",
-      "tags": ["evaluation", "trajectory-eval", "agents"],
+      "tags": [
+        "evaluation",
+        "trajectory-eval",
+        "agents"
+      ],
       "reading_time_minutes": 5,
       "pinned": false,
-      "research_window": "March 21, 2024 - April 25, 2024"
+      "research_window": [
+        "2024-03-21",
+        "2024-04-25"
+      ],
+      "trace_stages": [
+        "planning",
+        "tool_call",
+        "retrieval",
+        "execute",
+        "verify",
+        "output"
+      ],
+      "root_cause_stage": "verify",
+      "symptom_stage": "output"
     },
     {
       "id": "0047",
       "slug": "verify-gap",
-      "title": "the verify gap",
+      "title": "The Verify Gap",
       "hook": "The check that should catch the failure usually runs – but it looks at the wrong layer.",
       "path": "articles/verify-gap.html",
       "date": "2026-02-13",
       "status": "published",
       "type": "diagnostic",
-      "tags": ["verify-gap", "retrieval", "eval", "trajectory"],
+      "tags": [
+        "verify-gap",
+        "retrieval",
+        "eval",
+        "trajectory"
+      ],
       "reading_time_minutes": 5,
       "pinned": false,
-      "research_window": "2025-12-15 – 2026-02-13",
+      "research_window": [
+        "2025-12-15",
+        "2026-02-13"
+      ],
       "coined_term": "verify gap",
-      "trace_stages": ["planning", "tool_call", "retrieval", "execute", "verify", "output"]
+      "trace_stages": [
+        "planning",
+        "tool_call",
+        "retrieval",
+        "execute",
+        "verify",
+        "output"
+      ],
+      "root_cause_stage": "verify",
+      "symptom_stage": "output"
     },
     {
       "id": "0147",
@@ -103,28 +210,62 @@
       "date": "2026-03-14",
       "status": "published",
       "type": "diagnostic",
-      "tags": ["context-isolation", "verify-gap", "tool-result-channel", "mcp-leak"],
+      "tags": [
+        "context-isolation",
+        "verify-gap",
+        "tool-result-channel",
+        "mcp-leak"
+      ],
       "reading_time_minutes": 6,
       "pinned": false,
-      "research_window": "2026-02-14 to 2026-03-14",
+      "research_window": [
+        "2026-02-14",
+        "2026-03-14"
+      ],
       "coined_term": "phantom inheritance",
-      "trace_stages": ["planning", "tool_call", "retrieval", "execute", "verify", "output"]
+      "trace_stages": [
+        "planning",
+        "tool_call",
+        "retrieval",
+        "execute",
+        "verify",
+        "output"
+      ],
+      "root_cause_stage": "tool_call",
+      "symptom_stage": "output"
     },
     {
       "id": "0048",
       "slug": "context-bleed",
-      "title": "context bleed",
+      "title": "Context Bleed",
       "hook": "Your context isn't isolated — it's a shared wound that infects every subagent.",
       "path": "articles/context-bleed.html",
       "date": "2026-02-13",
       "status": "published",
       "type": "diagnostic",
-      "tags": ["context-bleed", "isolation", "memory", "retrieval"],
+      "tags": [
+        "context-bleed",
+        "isolation",
+        "memory",
+        "retrieval"
+      ],
       "reading_time_minutes": 5,
       "pinned": false,
-      "research_window": "2025-12-15 – 2026-02-13",
+      "research_window": [
+        "2025-12-15",
+        "2026-02-13"
+      ],
       "coined_term": "context bleed",
-      "trace_stages": ["planning", "tool_call", "retrieval", "execute", "verify", "output"]
+      "trace_stages": [
+        "planning",
+        "tool_call",
+        "retrieval",
+        "execute",
+        "verify",
+        "output"
+      ],
+      "root_cause_stage": "retrieval",
+      "symptom_stage": "output"
     },
     {
       "id": "0515",
@@ -135,103 +276,484 @@
       "date": "2026-05-15",
       "status": "published",
       "type": "diagnostic",
-      "tags": ["orchestration", "verify-gap", "tool-use", "cost-economics"],
+      "tags": [
+        "orchestration",
+        "verify-gap",
+        "tool-use",
+        "cost-economics"
+      ],
       "reading_time_minutes": 10,
       "pinned": false,
-      "research_window": "2026-03-20 to 2026-05-15",
-      "coined_term": "Verify Amnesia",
-      "trace_stages": ["planning", "tool_call", "retrieval", "execute", "verify", "output"]
+      "research_window": [
+        "2026-03-20",
+        "2026-05-15"
+      ],
+      "coined_term": "verify amnesia",
+      "trace_stages": [
+        "planning",
+        "tool_call",
+        "retrieval",
+        "execute",
+        "verify",
+        "output"
+      ],
+      "root_cause_stage": "verify",
+      "symptom_stage": "tool_call"
     },
     {
       "id": "0049",
       "slug": "moat-trap",
-      "title": "moat trap",
+      "title": "Moat Trap",
       "hook": "The model is a commodity — your harness is the only durable asset.",
       "path": "articles/moat-trap.html",
       "date": "2026-02-13",
       "status": "published",
       "type": "diagnostic",
-      "tags": ["moat-trap", "harness", "commoditization", "planning"],
+      "tags": [
+        "moat-trap",
+        "harness",
+        "commoditization",
+        "planning"
+      ],
       "reading_time_minutes": 5,
       "pinned": false,
-      "research_window": "2025-12-15 – 2026-02-13",
+      "research_window": [
+        "2025-12-15",
+        "2026-02-13"
+      ],
       "coined_term": "moat trap",
-      "trace_stages": ["planning", "tool_call", "retrieval", "execute", "verify", "output"]
-    }, {
-  "id": "0212",
-  "slug": "diagnosing-the-phantom-argument",
-  "title": "Diagnosing the Phantom Argument",
-  "hook": "Your tool call didn't fail because the model is dumb. It failed because of a Phantom Argument—a parameter ghostwritten by a 3-day-old RAG index.",
-  "path": "articles/diagnosing-the-phantom-argument.html",
-  "date": "2026-02-12",
-  "status": "published",
-  "format": "diagnostic",
-  "tags": ["tool-use", "retrieval", "debugging", "root-cause"],
-  "reading_time_minutes": 10,
-  "pinned": false,
-  "research_window": "2026-01-08 to 2026-02-12",
-  "coined_term": "Phantom Argument",
-  "trace_stages": ["planning","tool_call","retrieval","execute","verify","output"]
-}, {
-  "id": "0148",
-  "slug": "green-light-lie-eval-failure",
-  "title": "The Green-Light Lie: Your Agent Passed Eval and Failed the Job",
-  "hook": "We grade agents like chatbots — final answer correct — while trajectory failures, harness variance, and flawed verifiers make leaderboards lie.",
-  "path": "articles/green-light-lie-eval-failure.html",
-  "date": "2026-02-10",
-  "status": "published",
-  "format": "diagnostic",
-  "tags": ["evaluation", "verify-gap", "trajectory-eval", "swe-bench"],
-  "reading_time_minutes": 7,
-  "pinned": false,
-  "research_window": "2025-12-30 to 2026-02-10",
-  "coined_term": "green-light lie",
-  "trace_stages": ["planning","tool_call","retrieval","execute","verify","output"]
-}, {
-  "id": "0416",
-  "slug": "the-harness-mirage",
-  "title": "The Harness Mirage: Why Your Agent Infrastructure Is Lying to You",
-  "hook": "Most agent failures aren't model reasoning errors—they're the harness mirage: unconstrained execution loops passing dirty state through shallow verification gates.",
-  "path": "articles/the-harness-mirage.html",
-  "date": "2026-04-16",
-  "status": "published",
-  "format": "diagnostic",
-  "tags": ["harness-design", "verify-gap", "agent-architecture", "orchestration"],
-  "reading_time_minutes": 6,
-  "pinned": false,
-  "research_window": "2026-03-12 to 2026-04-16",
-  "coined_term": "the harness mirage",
-  "trace_stages": ["planning", "tool_call", "retrieval", "execute", "verify", "output"]
-}, {
-  "id": "0219",
-  "slug": "the-side-effect-slipstream",
-  "title": "The Side-Effect Slipstream: Where Agent Runtime Risk Actually Lives",
-  "hook": "Stop red-teaming prompts while ignoring unisolated runtimes. Most agent exploits leverage the side-effect slipstream: unmonitored state mutations passing through surface-level tool verification.",
-  "path": "articles/the-side-effect-slipstream.html",
-  "date": "2026-02-19",
-  "status": "published",
-  "format": "diagnostic",
-  "tags": ["agent-security", "execution-sandboxing", "mcp-security", "verify-gap"],
-  "reading_time_minutes": 5,
-  "pinned": false,
-  "research_window": "2026-01-08 to 2026-02-19",
-  "coined_term": "the side-effect slipstream",
-  "trace_stages": ["planning", "tool_call", "retrieval", "execute", "verify", "output"]
-}, {
-    "id": "0050",
-    "slug": "verify-theater",
-    "title": "verify theater",
-    "hook": "Your evals pass, your agents fail — because you're checking answers, not trajectories.",
-    "path": "articles/verify-theater.html",
-    "date": "2026-02-13",
-    "status": "published",
-    "format": "diagnostic",
-    "tags": ["verify-theater", "evaluation", "trajectory", "verify"],
-    "reading_time_minutes": 5,
-    "pinned": false,
-    "research_window": "2025-12-15 – 2026-02-13",
-    "coined_term": "verify theater",
-    "trace_stages": ["planning","tool_call","retrieval","execute","verify","output"]
-  }
+      "trace_stages": [
+        "planning",
+        "tool_call",
+        "retrieval",
+        "execute",
+        "verify",
+        "output"
+      ],
+      "root_cause_stage": "execute",
+      "symptom_stage": "output"
+    },
+    {
+      "id": "0212",
+      "slug": "diagnosing-the-phantom-argument",
+      "title": "Diagnosing the Phantom Argument",
+      "hook": "Your tool call didn't fail because the model is dumb. It failed because of a Phantom Argument—a parameter ghostwritten by a 3-day-old RAG index.",
+      "path": "articles/diagnosing-the-phantom-argument.html",
+      "date": "2026-02-12",
+      "status": "published",
+      "type": "diagnostic",
+      "tags": [
+        "tool-use",
+        "retrieval",
+        "debugging",
+        "root-cause"
+      ],
+      "reading_time_minutes": 10,
+      "pinned": false,
+      "research_window": [
+        "2026-01-08",
+        "2026-02-12"
+      ],
+      "coined_term": "phantom argument",
+      "trace_stages": [
+        "planning",
+        "tool_call",
+        "retrieval",
+        "execute",
+        "verify",
+        "output"
+      ],
+      "root_cause_stage": "retrieval",
+      "symptom_stage": "tool_call"
+    },
+    {
+      "id": "0148",
+      "slug": "green-light-lie-eval-failure",
+      "title": "The Green-Light Lie: Your Agent Passed Eval and Failed the Job",
+      "hook": "We grade agents like chatbots — final answer correct — while trajectory failures, harness variance, and flawed verifiers make leaderboards lie.",
+      "path": "articles/green-light-lie-eval-failure.html",
+      "date": "2026-02-10",
+      "status": "published",
+      "type": "diagnostic",
+      "tags": [
+        "evaluation",
+        "verify-gap",
+        "trajectory-eval",
+        "swe-bench"
+      ],
+      "reading_time_minutes": 7,
+      "pinned": false,
+      "research_window": [
+        "2025-12-30",
+        "2026-02-10"
+      ],
+      "coined_term": "green-light lie",
+      "trace_stages": [
+        "planning",
+        "tool_call",
+        "retrieval",
+        "execute",
+        "verify",
+        "output"
+      ],
+      "root_cause_stage": "verify",
+      "symptom_stage": "output"
+    },
+    {
+      "id": "0416",
+      "slug": "the-harness-mirage",
+      "title": "The Harness Mirage: Why Your Agent Infrastructure Is Lying to You",
+      "hook": "Most agent failures aren't model reasoning errors—they're the harness mirage: unconstrained execution loops passing dirty state through shallow verification gates.",
+      "path": "articles/the-harness-mirage.html",
+      "date": "2026-04-16",
+      "status": "published",
+      "type": "diagnostic",
+      "tags": [
+        "harness-design",
+        "verify-gap",
+        "agent-architecture",
+        "orchestration"
+      ],
+      "reading_time_minutes": 6,
+      "pinned": false,
+      "research_window": [
+        "2026-03-12",
+        "2026-04-16"
+      ],
+      "coined_term": "the harness mirage",
+      "trace_stages": [
+        "planning",
+        "tool_call",
+        "retrieval",
+        "execute",
+        "verify",
+        "output"
+      ],
+      "root_cause_stage": "execute",
+      "symptom_stage": "verify"
+    },
+    {
+      "id": "0219",
+      "slug": "the-side-effect-slipstream",
+      "title": "The Side-Effect Slipstream: Where Agent Runtime Risk Actually Lives",
+      "hook": "Stop red-teaming prompts while ignoring unisolated runtimes. Most agent exploits leverage the side-effect slipstream: unmonitored state mutations passing through surface-level tool verification.",
+      "path": "articles/the-side-effect-slipstream.html",
+      "date": "2026-02-19",
+      "status": "published",
+      "type": "diagnostic",
+      "tags": [
+        "agent-security",
+        "execution-sandboxing",
+        "mcp-security",
+        "verify-gap"
+      ],
+      "reading_time_minutes": 5,
+      "pinned": false,
+      "research_window": [
+        "2026-01-08",
+        "2026-02-19"
+      ],
+      "coined_term": "the side-effect slipstream",
+      "trace_stages": [
+        "planning",
+        "tool_call",
+        "retrieval",
+        "execute",
+        "verify",
+        "output"
+      ],
+      "root_cause_stage": "execute",
+      "symptom_stage": "verify"
+    },
+    {
+      "id": "0050",
+      "slug": "verify-theater",
+      "title": "Verify Theater",
+      "hook": "Your evals pass, your agents fail — because you're checking answers, not trajectories.",
+      "path": "articles/verify-theater.html",
+      "date": "2026-02-13",
+      "status": "published",
+      "type": "diagnostic",
+      "tags": [
+        "verify-theater",
+        "evaluation",
+        "trajectory",
+        "verify"
+      ],
+      "reading_time_minutes": 5,
+      "pinned": false,
+      "research_window": [
+        "2025-12-15",
+        "2026-02-13"
+      ],
+      "coined_term": "verify theater",
+      "trace_stages": [
+        "planning",
+        "tool_call",
+        "retrieval",
+        "execute",
+        "verify",
+        "output"
+      ],
+      "root_cause_stage": "verify",
+      "symptom_stage": "output"
+    },
+    {
+      "id": "0051",
+      "slug": "catching-fire",
+      "title": "Catching Fire",
+      "hook": "Your shared-context architecture isn't making your agents collaborative — it's making them contagious.",
+      "path": "articles/catching-fire.html",
+      "date": "2025-03-14",
+      "status": "published",
+      "type": "diagnostic",
+      "tags": [
+        "context-isolation",
+        "multi-agent",
+        "retrieval",
+        "orchestration"
+      ],
+      "reading_time_minutes": 5,
+      "pinned": false,
+      "research_window": [
+        "2025-02-07",
+        "2025-03-14"
+      ],
+      "coined_term": "contagious context",
+      "trace_stages": [
+        "planning",
+        "tool_call",
+        "retrieval",
+        "execute",
+        "verify",
+        "output"
+      ],
+      "root_cause_stage": "retrieval",
+      "symptom_stage": "output"
+    },
+    {
+      "id": "0052",
+      "slug": "stop-fixing-tool-syntax",
+      "title": "Stop Fixing Tool Syntax",
+      "hook": "Your agent rarely breaks at tool execution; it breaks two layers upstream when context truncation feeds it half a truth.",
+      "path": "articles/stop-fixing-tool-syntax.html",
+      "date": "2026-03-18",
+      "status": "published",
+      "type": "diagnostic",
+      "tags": [
+        "tool-use",
+        "context-truncation",
+        "retrieval",
+        "debugging"
+      ],
+      "reading_time_minutes": 4,
+      "pinned": false,
+      "trace_stages": [
+        "planning",
+        "tool_call",
+        "retrieval",
+        "execute",
+        "verify",
+        "output"
+      ],
+      "root_cause_stage": "retrieval",
+      "symptom_stage": "tool_call"
+    },
+    {
+      "id": "0055",
+      "slug": "the-retry-echo",
+      "title": "The Retry Echo",
+      "hook": "Your agent didn't double-charge the customer because it reasoned badly. It retried a write it had no way to observe.",
+      "path": "articles/the-retry-echo.html",
+      "date": "2026-10-06",
+      "status": "published",
+      "type": "diagnostic",
+      "tags": [
+        "idempotency",
+        "retries",
+        "execute",
+        "tool-contracts"
+      ],
+      "reading_time_minutes": 6,
+      "pinned": false,
+      "research_window": [
+        "2026-07-01",
+        "2026-10-06"
+      ],
+      "coined_term": "retry echo",
+      "trace_stages": [
+        "planning",
+        "tool_call",
+        "retrieval",
+        "execute",
+        "verify",
+        "output"
+      ],
+      "root_cause_stage": "execute",
+      "symptom_stage": "output"
+    },
+    {
+      "id": "0056",
+      "slug": "description-drift",
+      "title": "Description Drift",
+      "hook": "Your agent didn't forget how to use the tool. The tool changed what it tells your agent, and nobody diffed it.",
+      "path": "articles/description-drift.html",
+      "date": "2026-10-06",
+      "status": "published",
+      "type": "diagnostic",
+      "tags": [
+        "mcp",
+        "tool-call",
+        "schema-drift",
+        "tool-poisoning"
+      ],
+      "reading_time_minutes": 6,
+      "pinned": false,
+      "research_window": [
+        "2026-06-15",
+        "2026-10-06"
+      ],
+      "coined_term": "description drift",
+      "trace_stages": [
+        "planning",
+        "tool_call",
+        "retrieval",
+        "execute",
+        "verify",
+        "output"
+      ],
+      "root_cause_stage": "tool_call",
+      "symptom_stage": "planning"
+    },
+    {
+      "id": "0057",
+      "slug": "instruction-sediment",
+      "title": "Instruction Sediment",
+      "hook": "Your agent isn't ignoring your rules. It's obeying all of them, including the ones whose reason left the team months ago.",
+      "path": "articles/instruction-sediment.html",
+      "date": "2026-10-06",
+      "status": "published",
+      "type": "diagnostic",
+      "tags": [
+        "context-files",
+        "memory",
+        "retrieval",
+        "claude-md"
+      ],
+      "reading_time_minutes": 6,
+      "pinned": false,
+      "research_window": [
+        "2026-07-01",
+        "2026-10-06"
+      ],
+      "coined_term": "instruction sediment",
+      "trace_stages": [
+        "planning",
+        "tool_call",
+        "retrieval",
+        "execute",
+        "verify",
+        "output"
+      ],
+      "root_cause_stage": "retrieval",
+      "symptom_stage": "execute"
+    },
+    {
+      "id": "0058",
+      "slug": "the-paper-plan",
+      "title": "The Paper Plan",
+      "hook": "Your agent's plan looked right because nothing ever held execution to it. The plan is a document; the trajectory is what ran.",
+      "path": "articles/the-paper-plan.html",
+      "date": "2026-10-06",
+      "status": "published",
+      "type": "diagnostic",
+      "tags": [
+        "planning",
+        "plan-and-execute",
+        "orchestration",
+        "trajectory"
+      ],
+      "reading_time_minutes": 6,
+      "pinned": false,
+      "research_window": [
+        "2026-07-15",
+        "2026-10-06"
+      ],
+      "coined_term": "paper plan",
+      "trace_stages": [
+        "planning",
+        "tool_call",
+        "retrieval",
+        "execute",
+        "verify",
+        "output"
+      ],
+      "root_cause_stage": "planning",
+      "symptom_stage": "execute"
+    },
+    {
+      "id": "0059",
+      "slug": "handoff-fiction",
+      "title": "Handoff Fiction",
+      "hook": "Your reviewers didn't miss the bug. They reviewed the agent's description of the change, and the description was fiction.",
+      "path": "articles/handoff-fiction.html",
+      "date": "2026-10-06",
+      "status": "published",
+      "type": "diagnostic",
+      "tags": [
+        "code-review",
+        "pull-requests",
+        "output",
+        "human-in-the-loop"
+      ],
+      "reading_time_minutes": 6,
+      "pinned": false,
+      "research_window": [
+        "2026-05-01",
+        "2026-10-06"
+      ],
+      "coined_term": "handoff fiction",
+      "trace_stages": [
+        "planning",
+        "tool_call",
+        "retrieval",
+        "execute",
+        "verify",
+        "output"
+      ],
+      "root_cause_stage": "output",
+      "symptom_stage": "verify"
+    },
+    {
+      "id": "0060",
+      "slug": "the-six-stage-autopsy",
+      "title": "The Six-Stage Autopsy",
+      "hook": "Start here. Agent failures show up in one stage and start in another. This is the method every field report on this site uses to tell the two apart.",
+      "path": "articles/the-six-stage-autopsy.html",
+      "date": "2026-10-06",
+      "status": "published",
+      "type": "guide",
+      "tags": [
+        "start-here",
+        "methodology",
+        "debugging",
+        "root-cause"
+      ],
+      "reading_time_minutes": 7,
+      "pinned": true,
+      "research_window": [
+        "2026-07-01",
+        "2026-10-06"
+      ],
+      "coined_term": "six-stage autopsy",
+      "trace_stages": [
+        "planning",
+        "tool_call",
+        "retrieval",
+        "execute",
+        "verify",
+        "output"
+      ]
+    }
   ]
 }
